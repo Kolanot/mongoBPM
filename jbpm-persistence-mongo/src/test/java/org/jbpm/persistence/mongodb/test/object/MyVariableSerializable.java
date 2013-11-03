@@ -4,10 +4,7 @@ import java.io.Serializable;
 
 import org.mongodb.morphia.annotations.Embedded;
 
-/**
- *
- * @author salaboy
- */
+
 @Embedded
 public class MyVariableSerializable implements Serializable {
 

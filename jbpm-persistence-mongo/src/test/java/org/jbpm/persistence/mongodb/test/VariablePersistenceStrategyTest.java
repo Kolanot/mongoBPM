@@ -5,18 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.transaction.HeuristicMixedException;
-import javax.transaction.HeuristicRollbackException;
-import javax.transaction.NotSupportedException;
-import javax.transaction.RollbackException;
-import javax.transaction.Status;
-import javax.transaction.SystemException;
-import javax.transaction.UserTransaction;
-
 import org.drools.core.impl.InternalKnowledgeBase;
 import org.drools.core.process.core.Work;
 import org.drools.core.process.core.datatype.impl.type.ObjectDataType;
@@ -43,9 +31,7 @@ import org.jbpm.workflow.core.node.EndNode;
 import org.jbpm.workflow.core.node.StartNode;
 import org.jbpm.workflow.core.node.WorkItemNode;
 import org.junit.Test;
-import org.kie.api.KieBase;
 import org.kie.api.io.ResourceType;
-import org.kie.api.runtime.Environment;
 import org.kie.api.runtime.process.ProcessContext;
 import org.kie.api.runtime.process.ProcessInstance;
 import org.kie.api.runtime.process.WorkItem;
@@ -59,8 +45,6 @@ import org.slf4j.LoggerFactory;
 public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
 
     private static final Logger logger = LoggerFactory.getLogger( VariablePersistenceStrategyTest.class );
-    
-    private EntityManagerFactory emf;
     
     @Test
     public void testExtendingInterfaceVariablePersistence() throws Exception {
@@ -140,41 +124,14 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
     }
     
     @Test
-    public void testPersistenceVariables() throws NamingException, NotSupportedException, SystemException, RollbackException, HeuristicMixedException, HeuristicRollbackException {
-    	/*
-        EntityManager em = emf.createEntityManager();
-        UserTransaction utx = (UserTransaction) new InitialContext().lookup( "java:comp/UserTransaction" );
-        if( utx.getStatus() == Status.STATUS_NO_TRANSACTION ) { 
-            utx.begin();
-            em.joinTransaction();
-        }
-        int origNumMyEntities = em.createQuery("select i from MyEntity i").getResultList().size();
-        int origNumMyEntityMethods = em.createQuery("select i from MyEntityMethods i").getResultList().size();
-        int origNumMyEntityOnlyFields = em.createQuery("select i from MyEntityOnlyFields i").getResultList().size();
-        if( utx.getStatus() == Status.STATUS_ACTIVE ) { 
-            utx.commit();
-        }
-       	*/
+    public void testPersistenceVariables() {
         // Setup entities
         MyEntity myEntity = new MyEntity("This is a test Entity with annotation in fields");
         MyEntityMethods myEntityMethods = new MyEntityMethods("This is a test Entity with annotations in methods");
         MyEntityOnlyFields myEntityOnlyFields = new MyEntityOnlyFields("This is a test Entity with annotations in fields and without accesors methods");
         MyVariableSerializable myVariableSerializable = new MyVariableSerializable("This is a test SerializableObject");
 
-        /*
-        // persist entities
-        utx = (UserTransaction) new InitialContext().lookup( "java:comp/UserTransaction" );
-        utx.begin();
-        em.joinTransaction();
-        em.persist(myEntity);
-        em.persist(myEntityMethods);
-        em.persist(myEntityOnlyFields);
-        utx.commit();
-        em.close();
-        */
-        // More setup
-        Environment env =  createEnvironment();
-        KieBase kbase = createKnowledgeBase( "VariablePersistenceStrategyProcess.rf" );
+        createKnowledgeBase( "VariablePersistenceStrategyProcess.rf" );
         StatefulKnowledgeSession ksession = createKnowledgeSession();
 
         logger.debug("### Starting process ###");
@@ -192,15 +149,6 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         WorkItem workItem = handler.getWorkItem();
         assertNotNull( workItem );
         
-        /*
-        // Test results
-        List<?> result = emf.createEntityManager().createQuery("select i from MyEntity i").getResultList();
-        assertEquals(origNumMyEntities + 1, result.size());
-        result = emf.createEntityManager().createQuery("select i from MyEntityMethods i").getResultList();
-        assertEquals(origNumMyEntityMethods + 1, result.size());
-        result = emf.createEntityManager().createQuery("select i from MyEntityOnlyFields i").getResultList();
-        assertEquals(origNumMyEntityOnlyFields + 1, result.size());
-		*/
         logger.debug("### Retrieving process instance ###");
         ksession = reloadKnowledgeSession();
         WorkflowProcessInstance processInstance = (WorkflowProcessInstance)
@@ -269,29 +217,14 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
     }
     
     @Test
-    public void testPersistenceVariablesWithTypeChange() throws NamingException, NotSupportedException, SystemException, RollbackException, HeuristicMixedException, HeuristicRollbackException {
+    public void testPersistenceVariablesWithTypeChange() {
 
         MyEntity myEntity = new MyEntity("This is a test Entity with annotation in fields");
         MyEntityMethods myEntityMethods = new MyEntityMethods("This is a test Entity with annotations in methods");
         MyEntityOnlyFields myEntityOnlyFields = new MyEntityOnlyFields("This is a test Entity with annotations in fields and without accesors methods");
         MyVariableSerializable myVariableSerializable = new MyVariableSerializable("This is a test SerializableObject");
 
-        EntityManager em = emf.createEntityManager();
-        UserTransaction utx = (UserTransaction) new InitialContext().lookup( "java:comp/UserTransaction" );
-        int s = utx.getStatus();
-        if( utx.getStatus() == Status.STATUS_NO_TRANSACTION ) { 
-            utx.begin();
-        }
-        em.joinTransaction();
-        em.persist(myEntity);
-        em.persist(myEntityMethods);
-        em.persist(myEntityOnlyFields);
-        if( utx.getStatus() == Status.STATUS_ACTIVE ) { 
-            utx.commit();
-        }
-        em.close();
-        Environment env = createEnvironment();
-        KieBase kbase = createKnowledgeBase( "VariablePersistenceStrategyProcessTypeChange.rf" );
+        createKnowledgeBase( "VariablePersistenceStrategyProcessTypeChange.rf" );
         StatefulKnowledgeSession ksession = createKnowledgeSession();
 
         Map<String, Object> parameters = new HashMap<String, Object>();
@@ -328,27 +261,15 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
     }
     
     @Test
-    public void testPersistenceVariablesSubProcess() throws NamingException, NotSupportedException, SystemException, RollbackException, HeuristicMixedException, HeuristicRollbackException {
+    public void testPersistenceVariablesSubProcess() {
         
         MyEntity myEntity = new MyEntity("This is a test Entity with annotation in fields");
         MyEntityMethods myEntityMethods = new MyEntityMethods("This is a test Entity with annotations in methods");
         MyEntityOnlyFields myEntityOnlyFields = new MyEntityOnlyFields("This is a test Entity with annotations in fields and without accesors methods");
         MyVariableSerializable myVariableSerializable = new MyVariableSerializable("This is a test SerializableObject");
-        EntityManager em = emf.createEntityManager();
-        UserTransaction utx = (UserTransaction) new InitialContext().lookup( "java:comp/UserTransaction" );
-        utx.begin();
-        em.joinTransaction();
-        em.persist(myEntity);
-        em.persist(myEntityMethods);
-        em.persist(myEntityOnlyFields);
-        utx.commit();
-        em.close();
-        Environment env = createEnvironment();
-        KieBase kbase = createKnowledgeBase( "VariablePersistenceStrategySubProcess.rf" );
+
+        createKnowledgeBase( "VariablePersistenceStrategySubProcess.rf" );
         StatefulKnowledgeSession ksession = createKnowledgeSession();
-       
-        
-        
         
         Map<String, Object> parameters = new HashMap<String, Object>();
         parameters.put("x", "SomeString");
@@ -395,21 +316,9 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
     public void testWorkItemWithVariablePersistence() throws Exception{
         MyEntity myEntity = new MyEntity("This is a test Entity");
         MyVariableSerializable myVariableSerializable = new MyVariableSerializable("This is a test SerializableObject");
-        EntityManager em = emf.createEntityManager();
-        UserTransaction utx = (UserTransaction) new InitialContext().lookup( "java:comp/UserTransaction" );
-        utx.begin();
-        
-        em.joinTransaction();
-        em.persist(myEntity);
-        utx.commit();
-        em.close();
-        Environment env = createEnvironment();
-        KieBase kbase = createKnowledgeBase( "VPSProcessWithWorkItems.rf" );
+
+        createKnowledgeBase( "VPSProcessWithWorkItems.rf" );
         StatefulKnowledgeSession ksession = createKnowledgeSession();
-        
-        
-       
-       
         
         logger.debug("### Starting process ###");
         Map<String, Object> parameters = new HashMap<String, Object>();
@@ -462,7 +371,6 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         results.put("equis", processInstance.getVariable("x"));
         ksession.getWorkItemManager().completeWorkItem( workItem.getId(),  results );
 
-
         workItem = handler.getWorkItem();
         assertNotNull(workItem);
 
@@ -486,7 +394,6 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         workItem = handler.getWorkItem();
         assertNull(workItem);
 
-
         ksession = reloadKnowledgeSession();
         processInstance = (WorkflowProcessInstance)
 			ksession.getProcessInstance(processInstanceId);
@@ -494,33 +401,11 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
     }
 
     @Test
-    public void testEntityWithSuperClassAnnotationField() throws Exception {
-    	MySubEntity subEntity = new MySubEntity();
-    	subEntity.setId(3L);
-    	assertEquals(3L, JPAPlaceholderResolverStrategy.getClassIdValue(subEntity));
-    }
-    
-    @Test
-    public void testEntityWithSuperClassAnnotationMethod() throws Exception {
-    	MySubEntityMethods subEntity = new MySubEntityMethods();
-    	subEntity.setId(3L);
-    	assertEquals(3L, JPAPlaceholderResolverStrategy.getClassIdValue(subEntity));
-    }
-    
-    @Test
     public void testAbortWorkItemWithVariablePersistence() throws Exception{
         MyEntity myEntity = new MyEntity("This is a test Entity");
         MyVariableSerializable myVariableSerializable = new MyVariableSerializable("This is a test SerializableObject");
-        EntityManager em = emf.createEntityManager();
-        UserTransaction utx = (UserTransaction) new InitialContext().lookup( "java:comp/UserTransaction" );
-        utx.begin();
-        
-        em.joinTransaction();
-        em.persist(myEntity);
-        utx.commit();
-        em.close();
-        Environment env = createEnvironment();
-        KieBase kbase = createKnowledgeBase( "VPSProcessWithWorkItems.rf" );
+
+        createKnowledgeBase( "VPSProcessWithWorkItems.rf" );
         StatefulKnowledgeSession ksession = createKnowledgeSession();
         
         logger.debug("### Starting process ###");
@@ -572,56 +457,10 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         assertEquals("This is a new test SerializableObject", ((MyVariableSerializable) processInstance.getVariable("c")).getText());
     }    
     
-	/*
-    private StatefulKnowledgeSession createSession(KnowledgeBase kbase, Environment env){
-        //return JPAKnowledgeService.newStatefulKnowledgeSession( kbase, null, env );
-    	return createKnowledgeSession();
-    }
-    
-    private StatefulKnowledgeSession reloadSession(StatefulKnowledgeSession ksession, KnowledgeBase kbase, Environment env){
-    	/*
-        int sessionId = ksession.getId();
-        ksession.dispose();
-        return JPAKnowledgeService.loadStatefulKnowledgeSession( sessionId, kbase, null, env);
-    	return reloadKnowledgeSession();
-    }
-	*/
-
-    private KieBase createKnowledgeBase(String flowFile) {
+    private void createKnowledgeBase(String flowFile) {
     	createBaseWithClassPathResources(ResourceType.DRF, "rf/"+flowFile);
-    	/*
-        KnowledgeBuilderConfiguration conf = KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration();
-        conf.setProperty("drools.dialect.java.compiler", "JANINO");
-        KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder(conf);
-        kbuilder.add( new ClassPathResource( flowFile ), ResourceType.DRF );
-        if(kbuilder.hasErrors()){
-            StringBuilder errorMessage = new StringBuilder();
-            for (KnowledgeBuilderError error: kbuilder.getErrors()) {
-                errorMessage.append( error.getMessage() );
-                errorMessage.append( System.getProperty( "line.separator" ) );
-            }
-            fail( errorMessage.toString());
-        }
-        
-        KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
-        kbase.addKnowledgePackages( kbuilder.getKnowledgePackages() );
-        return kbase;
-        */
-    	return getKBase();
     }
 
-    
-    private Environment createEnvironment() {
-    	/*
-        Environment env = PersistenceUtil.createEnvironment(context);
-        env.set(EnvironmentName.OBJECT_MARSHALLING_STRATEGIES, new ObjectMarshallingStrategy[]{
-                                    new JPAPlaceholderResolverStrategy(env),
-                                    new SerializablePlaceholderResolverStrategy( ClassObjectMarshallingStrategyAcceptor.DEFAULT  )
-                                     });
-        */
-        return getEnv();
-    }
-    
     private void connect(Node sourceNode,
                          Node targetNode) {
         new ConnectionImpl (sourceNode, Node.CONNECTION_DEFAULT_TYPE,
