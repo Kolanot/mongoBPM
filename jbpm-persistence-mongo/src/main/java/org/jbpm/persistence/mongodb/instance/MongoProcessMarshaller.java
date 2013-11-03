@@ -48,6 +48,7 @@ import org.kie.api.runtime.process.NodeInstance;
 import org.kie.api.runtime.process.NodeInstanceContainer;
 import org.drools.core.process.instance.WorkItem;
 import org.kie.api.runtime.process.WorkflowProcessInstance;
+import org.mongodb.morphia.annotations.Embedded;
 
 public class MongoProcessMarshaller {
 	public static void serialize (MongoProcessData processData, AbstractWorkingMemory wm) 
@@ -163,7 +164,7 @@ public class MongoProcessMarshaller {
             	MongoJavaSerializable var = null;
             	if (object instanceof Serializable) {
             		var = new MongoJavaSerializable((Serializable)object);
-            		//variables.put(key, var);
+            		variables.put(key, var);
             	} else {
             		throw new NotSerializableException("ProcessVariable, class:" +  object.getClass() + " value: " + object);
             	}

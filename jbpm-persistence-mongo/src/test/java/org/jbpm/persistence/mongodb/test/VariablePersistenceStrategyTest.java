@@ -1,10 +1,5 @@
 package org.jbpm.persistence.mongodb.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,12 +17,7 @@ import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
 
-import junit.framework.Assert;
-
 import org.drools.core.impl.InternalKnowledgeBase;
-import org.drools.core.io.impl.ClassPathResource;
-import org.drools.core.marshalling.impl.ClassObjectMarshallingStrategyAcceptor;
-import org.drools.core.marshalling.impl.SerializablePlaceholderResolverStrategy;
 import org.drools.core.process.core.Work;
 import org.drools.core.process.core.datatype.impl.type.ObjectDataType;
 import org.drools.core.process.core.impl.WorkImpl;
@@ -52,24 +42,16 @@ import org.jbpm.workflow.core.node.ActionNode;
 import org.jbpm.workflow.core.node.EndNode;
 import org.jbpm.workflow.core.node.StartNode;
 import org.jbpm.workflow.core.node.WorkItemNode;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
+import org.kie.api.KieBase;
 import org.kie.api.io.ResourceType;
-import org.kie.api.marshalling.ObjectMarshallingStrategy;
 import org.kie.api.runtime.Environment;
-import org.kie.api.runtime.EnvironmentName;
 import org.kie.api.runtime.process.ProcessContext;
 import org.kie.api.runtime.process.ProcessInstance;
 import org.kie.api.runtime.process.WorkItem;
 import org.kie.api.runtime.process.WorkflowProcessInstance;
 import org.kie.internal.KnowledgeBase;
 import org.kie.internal.KnowledgeBaseFactory;
-import org.kie.internal.builder.KnowledgeBuilder;
-import org.kie.internal.builder.KnowledgeBuilderConfiguration;
-import org.kie.internal.builder.KnowledgeBuilderError;
-import org.kie.internal.builder.KnowledgeBuilderFactory;
-import org.kie.internal.persistence.jpa.JPAKnowledgeService;
 import org.kie.internal.runtime.StatefulKnowledgeSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,31 +60,30 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
 
     private static final Logger logger = LoggerFactory.getLogger( VariablePersistenceStrategyTest.class );
     
-    private HashMap<String, Object> context;
     private EntityManagerFactory emf;
     
     @Test
     public void testExtendingInterfaceVariablePersistence() throws Exception {
         // Setup
-        Environment env = createEnvironment();
         String processId = "extendingInterfaceVariablePersistence";
         String variableText = "my extending serializable variable text";
         KnowledgeBase kbase = getKnowledgeBaseForExtendingInterfaceVariablePersistence(processId,
                                                                                        variableText);
-        StatefulKnowledgeSession ksession = createSession( kbase , env );
+        setKBase(kbase);
+        StatefulKnowledgeSession ksession = createKnowledgeSession();
         Map<String, Object> initialParams = new HashMap<String, Object>();
         initialParams.put( "x", new MyVariableExtendingSerializable( variableText ) );
         
         // Start process and execute workItem
         long processInstanceId = ksession.startProcess( processId, initialParams ).getId();
         
-        ksession = reloadSession( ksession, kbase, env );
+        ksession = reloadKnowledgeSession();
         
         long workItemId = TestWorkItemHandler.getInstance().getWorkItem().getId();
         ksession.getWorkItemManager().completeWorkItem( workItemId, null );
         
         // Test
-        Assert.assertNull( ksession.getProcessInstance( processInstanceId ) );
+        assertNull( ksession.getProcessInstance( processInstanceId ) );
     }
 
     private KnowledgeBase getKnowledgeBaseForExtendingInterfaceVariablePersistence(String processId, final String variableText) {
@@ -134,7 +115,7 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         DroolsAction action = new DroolsConsequenceAction( "java" , null);
         action.setMetaData( "Action" , new Action() {
             public void execute(ProcessContext context) throws Exception {
-                Assert.assertEquals( variableText , ((MyVariableExtendingSerializable) context.getVariable( "x" )).getText()); ;
+                assertEquals( variableText , ((MyVariableExtendingSerializable) context.getVariable( "x" )).getText()); ;
             }
         });
         actionNode.setAction(action);
@@ -160,6 +141,7 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
     
     @Test
     public void testPersistenceVariables() throws NamingException, NotSupportedException, SystemException, RollbackException, HeuristicMixedException, HeuristicRollbackException {
+    	/*
         EntityManager em = emf.createEntityManager();
         UserTransaction utx = (UserTransaction) new InitialContext().lookup( "java:comp/UserTransaction" );
         if( utx.getStatus() == Status.STATUS_NO_TRANSACTION ) { 
@@ -172,13 +154,14 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         if( utx.getStatus() == Status.STATUS_ACTIVE ) { 
             utx.commit();
         }
-       
+       	*/
         // Setup entities
         MyEntity myEntity = new MyEntity("This is a test Entity with annotation in fields");
         MyEntityMethods myEntityMethods = new MyEntityMethods("This is a test Entity with annotations in methods");
         MyEntityOnlyFields myEntityOnlyFields = new MyEntityOnlyFields("This is a test Entity with annotations in fields and without accesors methods");
         MyVariableSerializable myVariableSerializable = new MyVariableSerializable("This is a test SerializableObject");
 
+        /*
         // persist entities
         utx = (UserTransaction) new InitialContext().lookup( "java:comp/UserTransaction" );
         utx.begin();
@@ -188,11 +171,11 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         em.persist(myEntityOnlyFields);
         utx.commit();
         em.close();
-        
+        */
         // More setup
         Environment env =  createEnvironment();
-        KnowledgeBase kbase = createKnowledgeBase( "VariablePersistenceStrategyProcess.rf" );
-        StatefulKnowledgeSession ksession = createSession( kbase, env );
+        KieBase kbase = createKnowledgeBase( "VariablePersistenceStrategyProcess.rf" );
+        StatefulKnowledgeSession ksession = createKnowledgeSession();
 
         logger.debug("### Starting process ###");
         Map<String, Object> parameters = new HashMap<String, Object>();
@@ -209,6 +192,7 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         WorkItem workItem = handler.getWorkItem();
         assertNotNull( workItem );
         
+        /*
         // Test results
         List<?> result = emf.createEntityManager().createQuery("select i from MyEntity i").getResultList();
         assertEquals(origNumMyEntities + 1, result.size());
@@ -216,9 +200,9 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         assertEquals(origNumMyEntityMethods + 1, result.size());
         result = emf.createEntityManager().createQuery("select i from MyEntityOnlyFields i").getResultList();
         assertEquals(origNumMyEntityOnlyFields + 1, result.size());
-
+		*/
         logger.debug("### Retrieving process instance ###");
-        ksession = reloadSession( ksession, kbase, env );
+        ksession = reloadKnowledgeSession();
         WorkflowProcessInstance processInstance = (WorkflowProcessInstance)
         	ksession.getProcessInstance( processInstanceId );
         assertNotNull( processInstance );
@@ -239,7 +223,7 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
 
         
         logger.debug("### Retrieving process instance ###");
-        ksession = reloadSession( ksession, kbase , env );
+        ksession = reloadKnowledgeSession();
 		processInstance = (WorkflowProcessInstance)
 			ksession.getProcessInstance(processInstanceId);
 		assertNotNull(processInstance);
@@ -259,7 +243,7 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         
 
         logger.debug("### Retrieving process instance ###");
-        ksession = reloadSession( ksession, kbase, env);
+        ksession = reloadKnowledgeSession();
         processInstance = (WorkflowProcessInstance)
         	ksession.getProcessInstance(processInstanceId);
         assertNotNull(processInstance);
@@ -278,7 +262,7 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         assertNull(workItem);
         
 
-        ksession = reloadSession( ksession, kbase, env );
+        ksession = reloadKnowledgeSession();
         processInstance = (WorkflowProcessInstance)
 			ksession.getProcessInstance(processInstanceId);
         assertNull(processInstance);
@@ -307,12 +291,9 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         }
         em.close();
         Environment env = createEnvironment();
-        KnowledgeBase kbase = createKnowledgeBase( "VariablePersistenceStrategyProcessTypeChange.rf" );
-        StatefulKnowledgeSession ksession = createSession( kbase, env );
-        
-        
-        
-        
+        KieBase kbase = createKnowledgeBase( "VariablePersistenceStrategyProcessTypeChange.rf" );
+        StatefulKnowledgeSession ksession = createKnowledgeSession();
+
         Map<String, Object> parameters = new HashMap<String, Object>();
         parameters.put("x", "SomeString");
         parameters.put("y", myEntity);
@@ -325,7 +306,7 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         WorkItem workItem = handler.getWorkItem();
         assertNotNull( workItem );
 
-        ksession = reloadSession( ksession, kbase, env );
+        ksession = reloadKnowledgeSession();
         ProcessInstance processInstance = ksession.getProcessInstance( processInstanceId );
         assertNotNull( processInstance );
         ksession.getWorkItemManager().completeWorkItem( workItem.getId(), null );
@@ -333,7 +314,7 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         workItem = handler.getWorkItem();
         assertNotNull( workItem );
 
-        ksession = reloadSession( ksession, kbase, env );
+        ksession = reloadKnowledgeSession();
         processInstance = ksession.getProcessInstance( processInstanceId );
         assertNotNull( processInstance );
         ksession.getWorkItemManager().completeWorkItem( workItem.getId(), null );
@@ -341,7 +322,7 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         workItem = handler.getWorkItem();
         assertNull( workItem );
 
-        ksession = reloadSession( ksession, kbase, env );
+        ksession = reloadKnowledgeSession();
         processInstance = ksession.getProcessInstance( processInstanceId );
         assertNull( processInstance );
     }
@@ -363,8 +344,8 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         utx.commit();
         em.close();
         Environment env = createEnvironment();
-        KnowledgeBase kbase = createKnowledgeBase( "VariablePersistenceStrategySubProcess.rf" );
-        StatefulKnowledgeSession ksession = createSession( kbase, env );
+        KieBase kbase = createKnowledgeBase( "VariablePersistenceStrategySubProcess.rf" );
+        StatefulKnowledgeSession ksession = createKnowledgeSession();
        
         
         
@@ -381,7 +362,7 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         WorkItem workItem = handler.getWorkItem();
         assertNotNull( workItem );
 
-        ksession = reloadSession( ksession, kbase, env );
+        ksession = reloadKnowledgeSession();
         ProcessInstance processInstance = ksession.getProcessInstance( processInstanceId );
         assertNotNull( processInstance );
         ksession.getWorkItemManager().completeWorkItem( workItem.getId(), null );
@@ -389,7 +370,7 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         workItem = handler.getWorkItem();
         assertNotNull( workItem );
 
-        ksession = reloadSession( ksession, kbase, env );
+        ksession = reloadKnowledgeSession();
         processInstance = ksession.getProcessInstance( processInstanceId );
         assertNotNull( processInstance );
         ksession.getWorkItemManager().completeWorkItem( workItem.getId(), null );
@@ -397,7 +378,7 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         workItem = handler.getWorkItem();
         assertNotNull( workItem );
 
-        ksession = reloadSession( ksession, kbase, env );
+        ksession = reloadKnowledgeSession();
         processInstance = ksession.getProcessInstance( processInstanceId );
         assertNotNull( processInstance );
         ksession.getWorkItemManager().completeWorkItem( workItem.getId(), null );
@@ -405,7 +386,7 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         workItem = handler.getWorkItem();
         assertNull( workItem );
 
-        ksession = reloadSession( ksession, kbase, env );
+        ksession = reloadKnowledgeSession();
         processInstance = ksession.getProcessInstance( processInstanceId );
         assertNull( processInstance );
     }
@@ -423,8 +404,8 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         utx.commit();
         em.close();
         Environment env = createEnvironment();
-        KnowledgeBase kbase = createKnowledgeBase( "VPSProcessWithWorkItems.rf" );
-        StatefulKnowledgeSession ksession = createSession( kbase , env);
+        KieBase kbase = createKnowledgeBase( "VPSProcessWithWorkItems.rf" );
+        StatefulKnowledgeSession ksession = createKnowledgeSession();
         
         
        
@@ -442,7 +423,7 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         assertNotNull( workItem );
 
         logger.debug("### Retrieving process instance ###");
-        ksession = reloadSession( ksession, kbase , env);
+        ksession = reloadKnowledgeSession();
         WorkflowProcessInstance processInstance = (WorkflowProcessInstance)
         	ksession.getProcessInstance( processInstanceId );
         assertNotNull( processInstance );
@@ -464,7 +445,7 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         assertNotNull( workItem );
 
         logger.debug("### Retrieving process instance ###");
-        ksession = reloadSession( ksession, kbase, env );
+        ksession = reloadKnowledgeSession();
 		processInstance = (WorkflowProcessInstance)
 			ksession.getProcessInstance(processInstanceId);
 		assertNotNull(processInstance);
@@ -486,7 +467,7 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         assertNotNull(workItem);
 
         logger.debug("### Retrieving process instance ###");
-        ksession = reloadSession( ksession, kbase, env );
+        ksession = reloadKnowledgeSession();
         processInstance = (WorkflowProcessInstance)
         	ksession.getProcessInstance(processInstanceId);
         assertNotNull(processInstance);
@@ -506,7 +487,7 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         assertNull(workItem);
 
 
-        ksession = reloadSession( ksession, kbase, env );
+        ksession = reloadKnowledgeSession();
         processInstance = (WorkflowProcessInstance)
 			ksession.getProcessInstance(processInstanceId);
         assertNull(processInstance);
@@ -539,8 +520,8 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         utx.commit();
         em.close();
         Environment env = createEnvironment();
-        KnowledgeBase kbase = createKnowledgeBase( "VPSProcessWithWorkItems.rf" );
-        StatefulKnowledgeSession ksession = createSession( kbase , env);
+        KieBase kbase = createKnowledgeBase( "VPSProcessWithWorkItems.rf" );
+        StatefulKnowledgeSession ksession = createKnowledgeSession();
         
         logger.debug("### Starting process ###");
         Map<String, Object> parameters = new HashMap<String, Object>();
@@ -554,7 +535,7 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         assertNotNull( workItem );
     
         logger.debug("### Retrieving process instance ###");
-        ksession = reloadSession( ksession, kbase , env);
+        ksession = reloadKnowledgeSession();
         WorkflowProcessInstance processInstance = (WorkflowProcessInstance)
                ksession.getProcessInstance( processInstanceId );
         assertNotNull( processInstance );
@@ -577,7 +558,7 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         assertNotNull( workItem );
     
         logger.debug("### Retrieving process instance ###");
-        ksession = reloadSession( ksession, kbase, env );
+        ksession = reloadKnowledgeSession();
                processInstance = (WorkflowProcessInstance)
                        ksession.getProcessInstance(processInstanceId);
                assertNotNull(processInstance);
@@ -591,17 +572,24 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         assertEquals("This is a new test SerializableObject", ((MyVariableSerializable) processInstance.getVariable("c")).getText());
     }    
     
+	/*
     private StatefulKnowledgeSession createSession(KnowledgeBase kbase, Environment env){
-        return JPAKnowledgeService.newStatefulKnowledgeSession( kbase, null, env );
+        //return JPAKnowledgeService.newStatefulKnowledgeSession( kbase, null, env );
+    	return createKnowledgeSession();
     }
     
     private StatefulKnowledgeSession reloadSession(StatefulKnowledgeSession ksession, KnowledgeBase kbase, Environment env){
+    	/*
         int sessionId = ksession.getId();
         ksession.dispose();
         return JPAKnowledgeService.loadStatefulKnowledgeSession( sessionId, kbase, null, env);
+    	return reloadKnowledgeSession();
     }
+	*/
 
-    private KnowledgeBase createKnowledgeBase(String flowFile) {
+    private KieBase createKnowledgeBase(String flowFile) {
+    	createBaseWithClassPathResources(ResourceType.DRF, "rf/"+flowFile);
+    	/*
         KnowledgeBuilderConfiguration conf = KnowledgeBuilderFactory.newKnowledgeBuilderConfiguration();
         conf.setProperty("drools.dialect.java.compiler", "JANINO");
         KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder(conf);
@@ -618,15 +606,20 @@ public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
         KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
         kbase.addKnowledgePackages( kbuilder.getKnowledgePackages() );
         return kbase;
+        */
+    	return getKBase();
     }
 
+    
     private Environment createEnvironment() {
+    	/*
         Environment env = PersistenceUtil.createEnvironment(context);
         env.set(EnvironmentName.OBJECT_MARSHALLING_STRATEGIES, new ObjectMarshallingStrategy[]{
                                     new JPAPlaceholderResolverStrategy(env),
                                     new SerializablePlaceholderResolverStrategy( ClassObjectMarshallingStrategyAcceptor.DEFAULT  )
                                      });
-        return env;
+        */
+        return getEnv();
     }
     
     private void connect(Node sourceNode,

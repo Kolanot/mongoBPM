@@ -2,10 +2,13 @@ package org.jbpm.persistence.mongodb.test.object;
 
 import java.io.Serializable;
 
+import org.mongodb.morphia.annotations.Embedded;
+
 /**
  *
  * @author salaboy
  */
+@Embedded
 public class MyVariableSerializable implements Serializable {
 
 	private static final long serialVersionUID = 510l;

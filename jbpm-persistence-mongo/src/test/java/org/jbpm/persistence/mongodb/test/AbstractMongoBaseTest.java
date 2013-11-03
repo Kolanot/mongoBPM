@@ -74,6 +74,10 @@ public abstract class AbstractMongoBaseTest extends AbstractBaseTest {
     	return kbase;
     }
 
+    protected void setKBase(KieBase kbase) {
+    	this.kbase = kbase;
+    }
+
     protected KieSessionConfiguration getConfig() {
     	return conf;
     }
@@ -97,7 +101,6 @@ public abstract class AbstractMongoBaseTest extends AbstractBaseTest {
         this.kbase = kbuilder.newKnowledgeBase();
     }
 
-    
     protected void createBaseWithClassPathResources(ResourceType rt, String... classPathProcessResources) {
         KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
         for (int i = 0; i < classPathProcessResources.length; ++i) {

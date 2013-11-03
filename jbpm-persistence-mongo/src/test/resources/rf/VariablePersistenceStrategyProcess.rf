@@ -6,8 +6,8 @@
 
   <header>
     <imports>
-      <import name="org.jbpm.persistence.session.objects.MyEntity" />
-      <import name="org.jbpm.persistence.session.objects.MyVariableSerializable" />
+      <import name="org.jbpm.persistence.mongodb.test.object.MyEntity" />
+      <import name="org.jbpm.persistence.mongodb.test.object.MyVariableSerializable" />
       <import name="javax.persistence.EntityManager" />
       <import name="org.kie.api.runtime.EnvironmentName" />
     </imports>
@@ -17,20 +17,20 @@
         <value></value>
       </variable>
       <variable name="y" >
-        <type name="org.drools.core.process.core.datatype.impl.type.ObjectDataType" className="org.jbpm.persistence.session.objects.MyEntity" />
+        <type name="org.drools.core.process.core.datatype.impl.type.ObjectDataType" className="org.jbpm.persistence.mongodb.test.object.MyEntity" />
       </variable>
       <variable name="z" >
-        <type name="org.drools.core.process.core.datatype.impl.type.ObjectDataType" className="org.jbpm.persistence.session.objects.MyVariableSerializable" />
+        <type name="org.drools.core.process.core.datatype.impl.type.ObjectDataType" className="org.jbpm.persistence.mongodb.test.object.MyVariableSerializable" />
       </variable>
       <variable name="a" >
         <type name="org.drools.core.process.core.datatype.impl.type.StringDataType" />
         <value></value>
       </variable>
       <variable name="b" >
-        <type name="org.drools.core.process.core.datatype.impl.type.ObjectDataType" className="org.jbpm.persistence.session.objects.MyEntity" />
+        <type name="org.drools.core.process.core.datatype.impl.type.ObjectDataType" className="org.jbpm.persistence.mongodb.test.object.MyEntity" />
       </variable>
       <variable name="c" >
-        <type name="org.drools.core.process.core.datatype.impl.type.ObjectDataType" className="org.jbpm.persistence.session.objects.MyVariableSerializable" />
+        <type name="org.drools.core.process.core.datatype.impl.type.ObjectDataType" className="org.jbpm.persistence.mongodb.test.object.MyVariableSerializable" />
       </variable>
     </variables>
   </header>
@@ -70,9 +70,7 @@ System.out.println("z = " + z);</action>
 System.out.println("y = " + y);
 System.out.println("z = " + z);
 kcontext.setVariable("a", "Some new String");
-EntityManager em = (EntityManager) kcontext.getKnowledgeRuntime().getEnvironment().get(EnvironmentName.APP_SCOPED_ENTITY_MANAGER);
 MyEntity myNewEntity = new MyEntity("This is a new test Entity");
-em.persist(myNewEntity);
 kcontext.setVariable("b", myNewEntity);
 kcontext.setVariable("c", new MyVariableSerializable("This is a new test SerializableObject"));</action>
     </actionNode>
@@ -106,9 +104,7 @@ System.out.println("a = " + a);
 System.out.println("b = " + b);
 System.out.println("c = " + c);
 kcontext.setVariable("a", "Some changed String");
-EntityManager em = (EntityManager)kcontext.getKnowledgeRuntime().getEnvironment().get(EnvironmentName.APP_SCOPED_ENTITY_MANAGER);
 MyEntity myNewEntity = new MyEntity("This is a changed test Entity");
-em.persist(myNewEntity);
 kcontext.setVariable("b", myNewEntity);
 kcontext.setVariable("c", new MyVariableSerializable("This is a changed test SerializableObject"));</action>
     </actionNode>

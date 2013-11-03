@@ -1,8 +1,8 @@
 package org.jbpm.persistence.mongodb.test.object;
 
-import javax.persistence.Entity;
+import org.mongodb.morphia.annotations.Embedded;
 
-@Entity
+@Embedded
 public class MySubEntity extends MyEntity {
 
 	private static final long serialVersionUID = 510l;

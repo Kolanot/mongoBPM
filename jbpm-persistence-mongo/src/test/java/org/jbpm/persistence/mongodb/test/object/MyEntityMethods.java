@@ -2,16 +2,9 @@ package org.jbpm.persistence.mongodb.test.object;
 
 import java.io.Serializable;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import org.mongodb.morphia.annotations.Embedded;
 
-/**
- *
- * @author salaboy
- */
-@Entity
+@Embedded
 public class MyEntityMethods implements Serializable {
 	private static final long serialVersionUID = 510l;
 	
@@ -28,7 +21,6 @@ public class MyEntityMethods implements Serializable {
     /**
      * @return the id
      */
-    @Id @GeneratedValue(strategy=GenerationType.AUTO)
     public Long getId() {
         return id;
     }

@@ -19,10 +19,11 @@ import org.mongodb.morphia.annotations.Transient;
 @Embedded
 public class MongoJavaSerializable implements MongoSerializable {
 	
-	private static enum ObjectType {BYTE, DOUBLE, FLOAT, INTEGER,LONG, SHORT, STRING, DATE, NUM, BOOL, OBJ, PROCESS};
+	private static enum ObjectType {BYTE, DOUBLE, FLOAT, INTEGER,LONG, SHORT, STRING, DATE, NUM, BOOL, OBJ, PROCESS, EMBEDDED};
 	
 	@Property ObjectType objectType; 
 	@Property public String objectString;
+	@Embedded private Serializable embeddedObject;
 	@Serialized private byte[] objectArray;
 	@Transient private Serializable serializedObject;
 	@Property private String serializedObjectClassName;
@@ -66,9 +67,13 @@ public class MongoJavaSerializable implements MongoSerializable {
 		} else if (object instanceof EmbeddedProcessInstance) {
 			objectString = "" + ((EmbeddedProcessInstance)object).getProcessInstanceId();
 			objectType = ObjectType.PROCESS;
-		} else {
-			this.serializedObject = object;
+		} else if (object.getClass().isAnnotationPresent(Embedded.class)) {
+			this.embeddedObject = object; 
+			objectType = ObjectType.EMBEDDED;
+		} else if (object instanceof Serializable){
+			this.serializedObject = (Serializable)object;
 			populateObjectArray();
+			objectType = ObjectType.OBJ;
 		}
 		this.serializedObjectClassName = object.getClass().getName();
 	}
@@ -138,6 +143,9 @@ public class MongoJavaSerializable implements MongoSerializable {
 				EmbeddedProcessInstance inst = new EmbeddedProcessInstance();
 				inst.setProcessInstanceId(Long.parseLong(objectString));
 				return inst;
+			}
+			case EMBEDDED: {
+				return embeddedObject;
 			}
 			case OBJ: {
 				populateSerializedObject();
