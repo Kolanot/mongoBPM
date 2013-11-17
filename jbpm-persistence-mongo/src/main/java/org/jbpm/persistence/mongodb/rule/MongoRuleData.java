@@ -20,9 +20,11 @@ import org.drools.core.common.InternalFactHandle;
 import org.drools.core.marshalling.impl.MarshallerReaderContext;
 
 @Embedded
-public class MongoRuleData {
+public class MongoRuleData implements java.io.Serializable {
 
-    @Embedded 
+	private static final long serialVersionUID = 1L;
+
+	@Embedded 
     private EmbeddedFactHandleFactory factHandleFactory;
 
 	private long propagationIdCounter;

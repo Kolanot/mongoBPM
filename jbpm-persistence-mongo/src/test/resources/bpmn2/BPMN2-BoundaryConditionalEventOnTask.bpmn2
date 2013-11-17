@@ -33,7 +33,7 @@
         <dataOutputRefs>_4_Output</dataOutputRefs>
       </outputSet>
       <conditionalEventDefinition>
-        <condition xsi:type="tFormalExpression" language="http://www.jboss.org/drools/rule">org.jbpm.bpmn2.objects.Person(name == "john")</condition>
+        <condition xsi:type="tFormalExpression" language="http://www.jboss.org/drools/rule">org.jbpm.persistence.mongodb.test.object.Person(name == "john")</condition>
       </conditionalEventDefinition>
     </boundaryEvent>
 

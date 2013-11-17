@@ -7,7 +7,11 @@ import org.jbpm.persistence.mongodb.object.MongoSerializable;
 import org.mongodb.morphia.annotations.Embedded;
 
 @Embedded
-public class EmbeddedFactHandle {
+public class EmbeddedFactHandle  implements java.io.Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private int id;
 	private long recency;
 	private boolean isJustified;

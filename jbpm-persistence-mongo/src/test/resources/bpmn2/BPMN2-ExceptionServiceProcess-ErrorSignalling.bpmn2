@@ -14,7 +14,7 @@
   <itemDefinition id="_stringItem" structureRef="java.lang.String" />
   
   <message id="_message" itemRef="_stringItem" />
-  <interface id="_serviceInterface" name="org.jbpm.bpmn2.objects.ExceptionService">
+  <interface id="_serviceInterface" name="org.jbpm.persistence.mongodb.test.object.ExceptionService">
     <operation id="_serviceOperation" name="throwException">
       <inMessageRef>_message</inMessageRef>
     </operation>

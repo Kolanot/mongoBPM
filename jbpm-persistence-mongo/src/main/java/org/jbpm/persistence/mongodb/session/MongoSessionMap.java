@@ -1,6 +1,7 @@
 package org.jbpm.persistence.mongodb.session;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -17,6 +18,8 @@ import org.kie.internal.process.CorrelationKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import redis.clients.jedis.Jedis;
+
 public class MongoSessionMap {
 	private static final Logger log = LoggerFactory.getLogger(MongoSessionMap.class.getName());
 	public static final MongoSessionMap INSTANCE = new MongoSessionMap();
@@ -25,7 +28,7 @@ public class MongoSessionMap {
 	private Map<Long, Integer> processInstanceIndex;
 	private Map<Long, Integer> workItemIndex;
 	private Map<MongoCorrelationKey, Integer> correlationIndex;
-	
+	private Jedis processDefMap = new Jedis("localhost");
 	private MongoSessionMap() {
 		sessionMap = new HashMap<Integer, MongoSessionInfo>();
 		processInstanceIndex = new HashMap<Long, Integer>();
@@ -33,12 +36,16 @@ public class MongoSessionMap {
 		correlationIndex = new HashMap<MongoCorrelationKey, Integer>();
 	}
 	
-	public Map<Integer, MongoSessionInfo> getSessionMap() {
-		return sessionMap;
+	public Collection<MongoSessionInfo> getAllSessions() {
+		return Collections.unmodifiableCollection(sessionMap.values());
 	}
 	
 	public MongoSessionInfo getCachedSession (int sessionId) {
 		return sessionMap.get(sessionId);
+	}
+	
+	public void removeCachedSession(int sessionId) {
+		sessionMap.remove(sessionId);
 	}
 	
 	public void addSession(MongoSessionInfo sessionInfo) {
@@ -48,6 +55,8 @@ public class MongoSessionMap {
 		for (MongoProcessInstanceInfo procInstInfo: procData.getProcessInstances()) {
 			long procInstanceId = procInstInfo.getProcessInstanceId();
 			processInstanceIndex.put(procInstanceId, sessionId);
+			processDefMap.sadd(procInstInfo.getProcessId(), "" + procInstanceId);
+			log.info("add to cache, key:" + procInstInfo.getProcessId() + ", value:" + procInstanceId);
 			if (procInstInfo.getCorrelationKey() != null) {
 				log.info("procInstInfo, class: " + procInstInfo.getCorrelationKey().getClass()+ ":" + procInstInfo.getCorrelationKey());
 				correlationIndex.put(procInstInfo.getCorrelationKey(),sessionId);
@@ -108,6 +117,17 @@ public class MongoSessionMap {
 		return null;
 	}
 
+	public Set<MongoProcessInstanceInfo> findProcessInstancesByProcessId(String processId) {
+		Set<MongoProcessInstanceInfo> result = new HashSet<MongoProcessInstanceInfo>();
+		Set<String> procInstSet = processDefMap.smembers(processId);
+		for (String procInstStr: procInstSet) {
+			long procInstId = Long.valueOf(procInstStr);
+			MongoProcessInstanceInfo procInstInfo = getProcessInstance(procInstId, true);
+			result.add(procInstInfo);
+		}
+		return result;
+	}
+
 	public boolean isSessionCached(int sessionId) {
 		return sessionMap.get(sessionId) != null;
 	}
@@ -127,7 +147,10 @@ public class MongoSessionMap {
 		MongoSessionInfo sessionInfo = sessionMap.get(sessionId);
 		MongoProcessData procData = sessionInfo.getProcessdata();
 		if (procData != null) {
+			MongoProcessInstanceInfo procInstInfo = procData.getProcessInstance(procInstId);
 			procData.removeProcessInstance(procInstId);
+			processInstanceIndex.remove(procInstId);
+			processDefMap.srem(procInstInfo.getProcessId(), "" + procInstId);
 		}
 		sessionInfo.setModifiedSinceLastSave(true);
 	}

@@ -21,7 +21,7 @@
         
         p: org.kie.api.runtime.process.WorkflowProcessInstance()
         personId: Long() from p.getVariable(&quot;personId&quot;)
-        org.jbpm.bpmn2.objects.Person(id == personId, name == &quot;John&quot;)
+        org.jbpm.persistence.mongodb.test.object.Person(id == personId, name == &quot;John&quot;)
         
         </condition>
       </conditionalEventDefinition>

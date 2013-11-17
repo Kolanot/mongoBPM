@@ -1,25 +1,26 @@
 package org.jbpm.persistence.mongodb.correlation;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.jbpm.persistence.mongodb.session.MongoSessionMap;
 import org.kie.internal.process.CorrelationKey;
 import org.kie.internal.process.CorrelationProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MongoCorrelationKey implements CorrelationKey {
+public class MongoCorrelationKey implements CorrelationKey, java.io.Serializable {
+	private static final long serialVersionUID = 1L;
 	private static final Logger log = LoggerFactory.getLogger(MongoCorrelationKey.class.getName());
     private String name;
     
-    private  List<CorrelationProperty<?>> properties;
+    private  List<MongoCorrelationProperty> properties;
 	public MongoCorrelationKey() {}
 	
     public MongoCorrelationKey(CorrelationKey key) {
     	this.name = key.getName();
-    	this.properties = new ArrayList<CorrelationProperty<?>> ();
+    	this.properties = new ArrayList<MongoCorrelationProperty> ();
     	for (Iterator<CorrelationProperty<?>> itr = key.getProperties().iterator(); itr.hasNext();) {
     		CorrelationProperty<?> property = itr.next();
     		this.properties.add(new MongoCorrelationProperty(property.getName(), property.getValue() == null? null: property.getValue().toString()));
@@ -35,7 +36,7 @@ public class MongoCorrelationKey implements CorrelationKey {
 
 	public void addProperty(String name, String value) {
         if (this.properties == null) {
-            this.properties = new ArrayList<CorrelationProperty<?>> ();
+            this.properties = new ArrayList<MongoCorrelationProperty> ();
         }
         this.properties.add(new MongoCorrelationProperty(name, value));
     }
@@ -47,13 +48,13 @@ public class MongoCorrelationKey implements CorrelationKey {
 
 	@Override
 	public List<CorrelationProperty<?>> getProperties() {
-		return properties;
+		List<CorrelationProperty<?>> ret = new ArrayList<CorrelationProperty<?>>();
+		for (MongoCorrelationProperty prop:properties) {
+			ret.add(prop);
+		}
+		return Collections.unmodifiableList(ret);
 	}
 
-	public void setProperties(List<CorrelationProperty<?>> properties) {
-		this.properties = properties;
-	}
-	
 	@Override
 	public int hashCode() {
 		final int prime = 31;

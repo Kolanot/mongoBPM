@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.drools.core.audit.WorkingMemoryInMemoryLogger;
 import org.drools.core.base.MapGlobalResolver;
 import org.drools.core.impl.EnvironmentFactory;
 import org.jbpm.persistence.mongodb.MongoKnowledgeService;
@@ -20,11 +21,14 @@ import org.kie.api.event.process.ProcessCompletedEvent;
 import org.kie.api.event.process.ProcessStartedEvent;
 import org.kie.api.io.ResourceType;
 import org.kie.api.runtime.Environment;
+import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.KieSessionConfiguration;
 import org.kie.internal.builder.KnowledgeBuilder;
 import org.kie.internal.builder.KnowledgeBuilderFactory;
 import org.kie.internal.io.ResourceFactory;
 import org.kie.internal.runtime.StatefulKnowledgeSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This test looks at the behavior of the  {@link MongoProcessInstanceManager} 
@@ -32,6 +36,7 @@ import org.kie.internal.runtime.StatefulKnowledgeSession;
  * and whether the process instances are available or not after creation.
  */
 public abstract class AbstractMongoBaseTest extends AbstractBaseTest {
+    private static final Logger log = LoggerFactory.getLogger(AbstractMongoBaseTest.class);
     
     private Environment env;
     private KieBase kbase;
@@ -40,6 +45,7 @@ public abstract class AbstractMongoBaseTest extends AbstractBaseTest {
     private StatefulKnowledgeSession ksession;
     private ProcessListener listener;
     private MongoSessionStore ds = new MongoSessionStore();
+    private WorkingMemoryInMemoryLogger logger;
 
     @Before
     public void before() throws Exception {
@@ -58,7 +64,8 @@ public abstract class AbstractMongoBaseTest extends AbstractBaseTest {
         listener = new ProcessListener();
         ksession.addEventListener(listener);
         sessionId = ksession.getId();
-        System.out.println("AbstractMongoBaseTest.createNewSession, ksessionid = " + ksession.getId());
+        logger = new WorkingMemoryInMemoryLogger((StatefulKnowledgeSession)ksession);
+        log.info("AbstractMongoBaseTest.createNewSession, ksessionid = " + ksession.getId());
 	}
 
     @After
@@ -77,7 +84,11 @@ public abstract class AbstractMongoBaseTest extends AbstractBaseTest {
     protected void setKBase(KieBase kbase) {
     	this.kbase = kbase;
     }
-
+    
+    protected WorkingMemoryInMemoryLogger getLogger() {
+    	return logger;
+    }
+    
     protected KieSessionConfiguration getConfig() {
     	return conf;
     }
@@ -104,7 +115,10 @@ public abstract class AbstractMongoBaseTest extends AbstractBaseTest {
     protected void createBaseWithClassPathResources(ResourceType rt, String... classPathProcessResources) {
         KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
         for (int i = 0; i < classPathProcessResources.length; ++i) {
-            kbuilder.add(ResourceFactory.newClassPathResource(classPathProcessResources[i]), rt);
+        	if (rt == ResourceType.BPMN2)
+        		kbuilder.add(ResourceFactory.newClassPathResource("bpmn2/" + classPathProcessResources[i]), rt);
+        	else 
+        		kbuilder.add(ResourceFactory.newClassPathResource(classPathProcessResources[i]), rt);
         }
         assertFalse(kbuilder.getErrors().toString(), kbuilder.hasErrors());
 
@@ -156,9 +170,25 @@ public abstract class AbstractMongoBaseTest extends AbstractBaseTest {
     protected void setConfig(KieSessionConfiguration conf) {
     	this.conf = conf;
     }
+    protected StatefulKnowledgeSession createKnowledgeSession(KieBase kbase) {
+    	this.kbase= kbase;
+    	createNewSession();
+        return ksession;
+    }
     protected StatefulKnowledgeSession createKnowledgeSession() {
     	createNewSession();
         return ksession;
+    }
+    
+    protected StatefulKnowledgeSession restoreSession(KieSession session, boolean noCache) {
+        ksession =  MongoKnowledgeService.loadStatefulKnowledgeSession(session.getId(), kbase, conf, env);
+        sessionId = ksession.getId();
+        return ksession;
+    }
+    
+    protected StatefulKnowledgeSession reloadKnowledgeSession(int sessionId) {
+    	this.sessionId = sessionId;
+    	return reloadKnowledgeSession();
     }
     
     protected StatefulKnowledgeSession reloadKnowledgeSession() {

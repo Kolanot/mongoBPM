@@ -8,7 +8,11 @@ import org.drools.core.reteoo.LeftTuple;
 import org.mongodb.morphia.annotations.Embedded;
 
 @Embedded 
-public class EmbeddedActivation {
+public class EmbeddedActivation implements java.io.Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private long activationNumber;
 	private int leftTuple;
 	private int salience;

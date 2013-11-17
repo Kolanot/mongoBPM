@@ -912,6 +912,25 @@ public class IntermediateEventTest extends JbpmBpmn2TestCase {
     }
 
     @Test
+    public void testMessageBoundaryEventAndTimerEventOnTask() throws Exception {
+        //KieSession ksession = createNewSession("BPMN2-BoundaryMessageEventOnTask.bpmn2");
+        KieSession ksession = createNewSession("BPMN2-BoundaryMessageEventAndTimerEventOnTask.bpmn2");
+        
+        ksession.getWorkItemManager().registerWorkItemHandler("Human Task",
+                new TestWorkItemHandler());
+
+        ProcessInstance processInstance = ksession
+                .startProcess("BoundaryMessageAndTimerOnTask");
+        ksession.signalEvent("Message-HelloMessage", "message data");
+        Thread.sleep(10000);
+        ksession.signalEvent("Message-HelloMessage", "message data");
+        //assertProcessInstanceFinished(processInstance, ksession);
+        assertNodeTriggered(processInstance.getId(), "StartProcess","Script Task 2","timer",
+                "User Task", "Boundary event", "Condition met",  "End2", "End3");
+
+    }
+
+    @Test
     public void testMessageBoundaryEventOnTaskComplete() throws Exception {
         KieSession ksession = createNewSession("BPMN2-BoundaryMessageEventOnTask.bpmn2");
         

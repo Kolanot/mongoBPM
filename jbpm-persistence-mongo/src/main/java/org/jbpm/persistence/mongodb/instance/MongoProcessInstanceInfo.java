@@ -1,5 +1,6 @@
 package org.jbpm.persistence.mongodb.instance;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -17,9 +18,14 @@ import org.kie.api.runtime.process.ProcessInstance;
 import org.kie.internal.process.CorrelationKey;
 
 @Embedded
-public class MongoProcessInstanceInfo {
+public class MongoProcessInstanceInfo implements Serializable {
 
-    protected Long                     processInstanceId;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	protected Long                     processInstanceId;
 
     private long                version;
 
@@ -50,14 +56,14 @@ public class MongoProcessInstanceInfo {
 	protected Map<String, Integer>         iterationLevels = new HashMap<String, Integer>();
 	
 	@Transient
-    ProcessInstance                      processInstance;
+    transient ProcessInstance                      processInstance;
    
     @Transient
     boolean                              modifiedSinceLastSave = false;
     @Transient
     boolean                              reconnected = false;
     @Property
-    protected List<String>                 completedNodeIds;
+    protected List<String>                 completedNodeIds = new ArrayList<String>();
     
     protected MongoProcessInstanceInfo() {
     }
@@ -269,8 +275,12 @@ public class MongoProcessInstanceInfo {
 	}
 	
 	@Embedded
-    public static class EmbeddedNodeInstance{
-    	long id;
+    public static class EmbeddedNodeInstance implements Serializable {
+    	/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+		long id;
     	long nodeId;
     	String nodeClassName;
     	List<Long> timerIds = new ArrayList<Long>();

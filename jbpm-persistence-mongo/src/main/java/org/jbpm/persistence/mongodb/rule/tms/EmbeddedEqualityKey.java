@@ -5,7 +5,11 @@ import java.util.List;
 
 import org.drools.core.common.EqualityKey;
 
-public class EmbeddedEqualityKey {
+public class EmbeddedEqualityKey implements java.io.Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private final int status;
 	private final int handleId;
 	private final List<Integer> otherHandles = new ArrayList<Integer>();

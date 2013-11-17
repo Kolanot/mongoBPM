@@ -17,7 +17,7 @@
       <bpmn2:startEvent id="StartEvent_2" name="start-sub" isInterrupting="false">
         <bpmn2:outgoing>SequenceFlow_3</bpmn2:outgoing>
         <bpmn2:conditionalEventDefinition>
-            <bpmn2:condition tns:language="http://www.jboss.org/drools/rule">org.jbpm.bpmn2.objects.Person(name == "john")</bpmn2:condition>
+            <bpmn2:condition tns:language="http://www.jboss.org/drools/rule">org.jbpm.persistence.mongodb.test.object.Person(name == "john")</bpmn2:condition>
         </bpmn2:conditionalEventDefinition>
       </bpmn2:startEvent>
       <bpmn2:scriptTask id="ScriptTask_1" name="Script Task 1">

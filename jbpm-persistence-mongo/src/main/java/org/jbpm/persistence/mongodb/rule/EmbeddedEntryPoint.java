@@ -10,8 +10,17 @@ import org.jbpm.persistence.mongodb.rule.tms.EmbeddedTruthMaintenanceSystem;
 import org.mongodb.morphia.annotations.Embedded;
 
 @Embedded
-public class EmbeddedEntryPoint {
-	public static class ObjectTypeConfiguration {
+public class EmbeddedEntryPoint implements java.io.Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public static class ObjectTypeConfiguration implements java.io.Serializable {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		private String typeName;
 		private Boolean TMSEnabled;
 		public ObjectTypeConfiguration() {}

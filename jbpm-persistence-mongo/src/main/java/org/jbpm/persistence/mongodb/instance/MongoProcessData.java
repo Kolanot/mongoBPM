@@ -1,5 +1,6 @@
 package org.jbpm.persistence.mongodb.instance;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -16,7 +17,11 @@ import org.mongodb.morphia.annotations.PrePersist;
 import org.mongodb.morphia.annotations.Transient;
 
 @Embedded
-public class MongoProcessData {
+public class MongoProcessData implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	@Transient
 	private Map<Long, MongoProcessInstanceInfo> processInstanceMap = new HashMap<Long, MongoProcessInstanceInfo>();
 	@Transient

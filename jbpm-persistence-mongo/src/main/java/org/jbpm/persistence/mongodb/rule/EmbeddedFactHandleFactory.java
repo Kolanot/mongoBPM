@@ -6,7 +6,8 @@ import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Property;
 
 @Embedded
-public class EmbeddedFactHandleFactory {
+public class EmbeddedFactHandleFactory implements java.io.Serializable {
+	private static final long serialVersionUID = 1L;
 	@Property
 	private int id;
 	@Property

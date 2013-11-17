@@ -3,7 +3,11 @@ package org.jbpm.persistence.mongodb.correlation;
 import org.kie.internal.process.CorrelationProperty;
 import org.mongodb.morphia.annotations.Property;
 
-public class MongoCorrelationProperty implements CorrelationProperty<String> {
+public class MongoCorrelationProperty implements CorrelationProperty<String>, java.io.Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	@Property
 	private String name;
 	@Property

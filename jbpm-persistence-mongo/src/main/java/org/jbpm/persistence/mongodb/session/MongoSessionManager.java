@@ -44,11 +44,11 @@ public class MongoSessionManager {
 	}
 	
 	private MongoSessionInfo getCachedSession(int sessionId) {
-		return MongoSessionMap.INSTANCE.getSessionMap().get(sessionId);
+		return MongoSessionMap.INSTANCE.getCachedSession(sessionId);
 	}
 	
 	public void removeCachedSession(int sessionId) {
-		MongoSessionMap.INSTANCE.getSessionMap().remove(sessionId);
+		MongoSessionMap.INSTANCE.removeCachedSession(sessionId);
 	}
 	
 	public KieSession getSession(int sessionId) 
@@ -97,7 +97,7 @@ public class MongoSessionManager {
 
 	public Set<ProcessInstance> getAllProcessInstances() {
 		Set<ProcessInstance> instances = new HashSet<ProcessInstance>();
-		Collection<MongoSessionInfo> sessions = MongoSessionMap.INSTANCE.getSessionMap().values();
+		Collection<MongoSessionInfo> sessions = MongoSessionMap.INSTANCE.getAllSessions();
 		for (MongoSessionInfo sessionInfo:sessions){
 			MongoProcessData procData = sessionInfo.getProcessdata();
 			if (procData != null) {
@@ -110,7 +110,7 @@ public class MongoSessionManager {
 	}
 	
 	public void addProcessInstance(KieSession session, ProcessInstance processInstance, CorrelationKey correlationKey) {
-		MongoSessionInfo sessionInfo = MongoSessionMap.INSTANCE.getSessionMap().get(session.getId());
+		MongoSessionInfo sessionInfo = MongoSessionMap.INSTANCE.getCachedSession(session.getId());
         MongoProcessInstanceInfo processInstanceInfo = new MongoProcessInstanceInfo(processInstance);
         if (correlationKey != null) 
         	processInstanceInfo.assignCorrelationKey(correlationKey);
@@ -119,6 +119,7 @@ public class MongoSessionManager {
         procInstId = MongoPersistUtil.pairingSessionId(sessionInfo.getId(), procInstId);
         processInstanceInfo.setProcessInstanceId(procInstId);
         ((org.jbpm.process.instance.ProcessInstance) processInstance).setId( processInstanceInfo.getProcessInstanceId() );
+        processInstanceInfo.setProcessId(processInstance.getProcessId());
 
         sessionInfo.addProcessInstance(processInstanceInfo);
         sessionInfo.setModifiedSinceLastSave(true);
@@ -136,7 +137,7 @@ public class MongoSessionManager {
     }
     
     public void saveModifiedSessions() throws ClassNotFoundException, IOException {
-        for (MongoSessionInfo session : MongoSessionMap.INSTANCE.getSessionMap().values()) {
+        for (MongoSessionInfo session : MongoSessionMap.INSTANCE.getAllSessions()) {
         	if (session.isModifiedSinceLastSave()) {
         		marshaller.syncSnapshot(session);
         		session.setLastModificationDate(new java.util.Date());

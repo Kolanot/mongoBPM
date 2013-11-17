@@ -1,14 +1,9 @@
 package org.jbpm.persistence.mongodb.instance;
 
 import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.drools.core.common.InternalKnowledgeRuntime;
-import org.jbpm.persistence.mongodb.MongoProcessStore;
-import org.jbpm.persistence.mongodb.MongoSessionStore;
-import org.jbpm.persistence.mongodb.session.MongoSessionInfo;
 import org.jbpm.persistence.mongodb.session.MongoSessionManager;
 import org.jbpm.persistence.mongodb.session.MongoSessionMap;
 import org.jbpm.process.instance.event.DefaultSignalManager;

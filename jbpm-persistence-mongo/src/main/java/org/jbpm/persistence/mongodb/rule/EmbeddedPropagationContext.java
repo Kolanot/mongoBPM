@@ -3,7 +3,11 @@ package org.jbpm.persistence.mongodb.rule;
 import org.mongodb.morphia.annotations.Embedded;
 
 @Embedded
-public class EmbeddedPropagationContext {
+public class EmbeddedPropagationContext implements java.io.Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private int type;
 	private String ruleOriginPackage;
 	private String ruleOriginName;

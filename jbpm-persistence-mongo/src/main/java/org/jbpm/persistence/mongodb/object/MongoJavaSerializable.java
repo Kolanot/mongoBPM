@@ -1,6 +1,7 @@
 package org.jbpm.persistence.mongodb.object;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
@@ -8,7 +9,6 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
 
-import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.jbpm.persistence.mongodb.instance.EmbeddedProcessInstance;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.PreSave;

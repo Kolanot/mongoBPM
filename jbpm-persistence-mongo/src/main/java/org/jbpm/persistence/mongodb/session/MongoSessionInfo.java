@@ -17,7 +17,9 @@ import org.jbpm.persistence.mongodb.session.timer.EmbeddedTimer;
 import org.kie.api.runtime.KieSession;
 
 @Entity
-public class MongoSessionInfo {
+public class MongoSessionInfo implements java.io.Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	@Id 
 	private Integer id;

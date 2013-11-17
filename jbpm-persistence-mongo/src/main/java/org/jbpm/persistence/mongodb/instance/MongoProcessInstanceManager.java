@@ -46,11 +46,26 @@ public class MongoProcessInstanceManager implements ProcessInstanceManager {
     }
 
     public void addProcessInstance(ProcessInstance processInstance, CorrelationKey correlationKey) {
-    	sessionManager.addProcessInstance((KieSession)kruntime, processInstance, correlationKey);
         internalAddProcessInstance(processInstance);
+    	sessionManager.addProcessInstance((KieSession)kruntime, processInstance, correlationKey);
     }
     
     public void internalAddProcessInstance(ProcessInstance processInstance) {
+    	org.jbpm.process.instance.ProcessInstance pi = (org.jbpm.process.instance.ProcessInstance)processInstance;
+        if (((ProcessInstanceImpl) pi).getProcessXml() == null) {
+	        Process process = kruntime.getKieBase().getProcess( processInstance.getProcessId() );
+	        if ( process == null ) {
+	            throw new IllegalArgumentException( "Could not find process " + processInstance.getProcessId() );
+	        }
+	        pi.setProcess( process );
+        }
+        if ( pi.getKnowledgeRuntime() == null ) {
+            Long parentProcessInstanceId = (Long) ((ProcessInstanceImpl) processInstance).getMetaData().get("ParentProcessInstanceId");
+            if (parentProcessInstanceId != null) {
+                kruntime.getProcessInstance(parentProcessInstanceId);
+            }
+            pi.setKnowledgeRuntime( kruntime );
+        }
     }
 
     public ProcessInstance getProcessInstance(long id) {
@@ -68,20 +83,7 @@ public class MongoProcessInstanceManager implements ProcessInstanceManager {
         org.jbpm.process.instance.ProcessInstance processInstance = (org.jbpm.process.instance.ProcessInstance)	procInstInfo.getProcessInstance();
 
         if (processInstance != null) {
-            if (((ProcessInstanceImpl) processInstance).getProcessXml() == null) {
-    	        Process process = kruntime.getKieBase().getProcess( processInstance.getProcessId() );
-    	        if ( process == null ) {
-    	            throw new IllegalArgumentException( "Could not find process " + processInstance.getProcessId() );
-    	        }
-    	        processInstance.setProcess( process );
-            }
-            if ( processInstance.getKnowledgeRuntime() == null ) {
-                Long parentProcessInstanceId = (Long) ((ProcessInstanceImpl) processInstance).getMetaData().get("ParentProcessInstanceId");
-                if (parentProcessInstanceId != null) {
-                    kruntime.getProcessInstance(parentProcessInstanceId);
-                }
-                processInstance.setKnowledgeRuntime( kruntime );
-            }
+        	internalAddProcessInstance(processInstance);
             if (!procInstInfo.isReconnected()) {
             	((RuleFlowProcessInstance)processInstance).reconnect();
             	procInstInfo.reconnect();

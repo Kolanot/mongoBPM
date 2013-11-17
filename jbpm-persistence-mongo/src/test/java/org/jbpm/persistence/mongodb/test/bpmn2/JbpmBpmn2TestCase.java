@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.drools.compiler.compiler.PackageBuilderConfiguration;
-import org.drools.core.audit.WorkingMemoryInMemoryLogger;
 import org.drools.core.audit.event.LogEvent;
 import org.drools.core.audit.event.RuleFlowLogEvent;
 import org.drools.core.audit.event.RuleFlowNodeLogEvent;
@@ -39,7 +38,6 @@ import org.jbpm.compiler.xml.XmlProcessReader;
 import org.jbpm.persistence.mongodb.test.AbstractMongoBaseTest;
 import org.jbpm.ruleflow.core.RuleFlowProcess;
 import org.jbpm.workflow.instance.impl.WorkflowProcessInstanceImpl;
-import org.junit.After;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
@@ -80,7 +78,6 @@ public abstract class JbpmBpmn2TestCase extends AbstractMongoBaseTest {
             "PREPARED", "COMMITTED", "ROLLEDBACK", "UNKNOWN", "NO_TRANSACTION",
             "PREPARING", "COMMITTING", "ROLLING_BACK" };
 
-    private WorkingMemoryInMemoryLogger logger;
     //private AuditLogService logService;
 
     @Rule
@@ -113,13 +110,15 @@ public abstract class JbpmBpmn2TestCase extends AbstractMongoBaseTest {
 
     protected KieSession createNewSession(String...classPathResources) {
         createBaseWithClassPathResources(ResourceType.BPMN2,classPathResources);
-        return createKnowledgeSession();
+        KieSession ksession = createKnowledgeSession();
+        return ksession;
+
     }
 
     protected KieBase createKnowledgeBase(String... process) throws Exception {
         List<Resource> resources = new ArrayList<Resource>();
         for (int i = 0; i < process.length; ++i) {
-            String p = process[i];
+            //String p = process[i];
             resources.addAll(buildAndDumpBPMN2Process(process[i]));
         }
         return createKnowledgeBaseFromResources(resources.toArray(new Resource[resources.size()]));
@@ -311,29 +310,13 @@ public abstract class JbpmBpmn2TestCase extends AbstractMongoBaseTest {
     public int getNumberOfNodeTriggered(long processInstanceId,
             String node) {
         int counter = 0;
-        /*
-        if (sessionPersistence) {
-            List<NodeInstanceLog> logs = logService.findNodeInstances(processInstanceId);
-            if (logs != null) {
-                for (NodeInstanceLog l : logs) {
-                    String nodeName = l.getNodeName();
-                    if ((l.getType() == NodeInstanceLog.TYPE_ENTER 
-                            || l.getType() == NodeInstanceLog.TYPE_EXIT)
-                            && node.equals(nodeName)) {
-                        counter++;
-                    }
+        for (LogEvent event : getLogger().getLogEvents()) {
+            if (event instanceof RuleFlowNodeLogEvent) {
+                String nodeName = ((RuleFlowNodeLogEvent) event).getNodeName();
+                if (node.equals(nodeName)) {
+                    counter++;
                 }
             }
-        } else {
-        */
-            for (LogEvent event : logger.getLogEvents()) {
-                if (event instanceof RuleFlowNodeLogEvent) {
-                    String nodeName = ((RuleFlowNodeLogEvent) event).getNodeName();
-                    if (node.equals(nodeName)) {
-                        counter++;
-                    }
-                }
-         //   }
         }
         return counter;
     }
@@ -348,7 +331,7 @@ public abstract class JbpmBpmn2TestCase extends AbstractMongoBaseTest {
             }
         } else {
         */
-            LogEvent [] events = logger.getLogEvents().toArray(new LogEvent[0]);
+            LogEvent [] events = getLogger().getLogEvents().toArray(new LogEvent[0]);
             for (LogEvent event : events ) { 
                 if (event.getType() == LogEvent.BEFORE_RULEFLOW_CREATED) {
                     if(((RuleFlowLogEvent) event).getProcessId().equals(processId)) {
@@ -397,7 +380,7 @@ public abstract class JbpmBpmn2TestCase extends AbstractMongoBaseTest {
             }
         } else {
         */
-            for (LogEvent event : logger.getLogEvents()) {
+            for (LogEvent event : getLogger().getLogEvents()) {
                 if (event instanceof RuleFlowNodeLogEvent) {
                     String nodeName = ((RuleFlowNodeLogEvent) event)
                             .getNodeName();
@@ -411,22 +394,9 @@ public abstract class JbpmBpmn2TestCase extends AbstractMongoBaseTest {
     }
 
     protected void clearHistory() {
-        if (logger != null) {
-            logger.clear();
+        if (getLogger() != null) {
+            getLogger().clear();
         }
-        /*
-        if (sessionPersistence) {
-            try {
-                logService.clear();
-            } catch(Exception e) {
-                
-            }
-        } else {
-            if (logger != null) {
-                logger.clear();
-            }
-        }
-        */
     }
 
     public void assertProcessVarExists(ProcessInstance process,
@@ -555,7 +525,7 @@ public abstract class JbpmBpmn2TestCase extends AbstractMongoBaseTest {
         }
     }
 
-    public Object eval(Reader reader, Map vars) {
+    public Object eval(Reader reader, @SuppressWarnings("rawtypes") Map vars) {
         try {
             return eval(toString(reader), vars);
         } catch (IOException e) {
@@ -573,7 +543,8 @@ public abstract class JbpmBpmn2TestCase extends AbstractMongoBaseTest {
         return sb.toString();
     }
 
-    public Object eval(String str, Map vars) {
+    @SuppressWarnings({ "unchecked" })
+	public Object eval(String str, @SuppressWarnings("rawtypes") Map vars) {
 
         ParserContext context = new ParserContext();
         context.addPackageImport("org.jbpm.task");

@@ -144,7 +144,7 @@ public class MongoProcessMarshaller {
         }
         
         // completed nodes
-        procInfo.setCompletedNodeIds(workFlow.getCompletedNodeIds());
+        procInfo.getCompletedNodeIds().addAll(workFlow.getCompletedNodeIds());
         
         // IterationLevels
         procInfo.getIterationLevels().clear();

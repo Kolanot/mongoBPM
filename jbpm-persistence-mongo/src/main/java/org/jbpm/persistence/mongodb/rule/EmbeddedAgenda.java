@@ -8,10 +8,12 @@ import org.drools.core.common.AgendaGroupQueueImpl;
 import org.mongodb.morphia.annotations.Embedded;
 
 @Embedded 
-public class EmbeddedAgenda {
+public class EmbeddedAgenda implements java.io.Serializable {
+	private static final long serialVersionUID = 1L;
 	
     @Embedded 
-    public static class EmbeddedAgendaGroup {
+    public static class EmbeddedAgendaGroup implements java.io.Serializable {
+    	private static final long serialVersionUID = 1L;
     	private String name;
     	private boolean active;
     	private boolean autoDeactivate;
@@ -19,7 +21,8 @@ public class EmbeddedAgenda {
     	private boolean hasRuleFlowListener;
     	private long activatedForRecency;
     	
-    	public static class NodeInstance {
+    	public static class NodeInstance  implements java.io.Serializable {
+    		private static final long serialVersionUID = 1L;
     		private final long processInstanceId;
     		private final String nodeInstanceId;
     		public NodeInstance(long processInstanceId, String nodeInstanceId) {
