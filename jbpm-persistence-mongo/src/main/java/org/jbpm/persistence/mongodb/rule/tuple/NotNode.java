@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class NotNode extends EmbeddedTuple {
+	private static final long serialVersionUID = 1L;
 	private List<EmbeddedTuple> notBlockedTuples;
 
 	public NotNode(int sinkId, boolean leftTupleNotBlocked) {

@@ -10,7 +10,8 @@ import org.jbpm.persistence.mongodb.object.MongoJavaSerializable;
 import org.mongodb.morphia.annotations.Embedded;
 
 @Embedded
-public class MongoWorkItemInfo {
+public class MongoWorkItemInfo implements Serializable {
+	private static final long serialVersionUID = 1L;
 
     private long id;
     private String name;

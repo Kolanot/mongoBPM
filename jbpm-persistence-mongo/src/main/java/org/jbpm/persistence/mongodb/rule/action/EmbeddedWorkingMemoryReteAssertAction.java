@@ -5,6 +5,7 @@ import java.util.List;
 
 public class EmbeddedWorkingMemoryReteAssertAction extends
 		EmbeddedWorkingMemoryAction {
+	private static final long serialVersionUID = 1L;
 	private int factHandleId;
 	private boolean removeLogical;
 	private boolean updateEqualsMap;

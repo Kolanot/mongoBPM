@@ -6,7 +6,8 @@ import org.jbpm.process.instance.timer.TimerInstance;
 import org.mongodb.morphia.annotations.Embedded;
 
 @Embedded
-public class EmbeddedTimerInstance {
+public class EmbeddedTimerInstance implements java.io.Serializable {
+	private static final long serialVersionUID = 1L;
     private long id;
     private long timerId;
     private long delay;

@@ -9,7 +9,8 @@ import org.kie.api.runtime.process.ProcessInstance;
 import org.mongodb.morphia.annotations.Property;
 import org.mongodb.morphia.annotations.Serialized;
 
-public class EmbeddedSignal {
+public class EmbeddedSignal implements java.io.Serializable {
+	private static final long serialVersionUID = 1L;
 	public static enum EventType {BYTE, DOUBLE, FLOAT, INTEGER,LONG, SHORT, STRING, DATE, NUM, BOOL, OBJ, PROCESS};
 	
 	@Property public String stringEvent;

@@ -9,7 +9,8 @@ import org.mongodb.morphia.annotations.Polymorphic;
 
 @Embedded 
 @Polymorphic
-public abstract class EmbeddedTimer {
+public abstract class EmbeddedTimer implements java.io.Serializable {
+	private static final long serialVersionUID = 1L;
 	public abstract EmbeddedTrigger getTrigger();
 	protected EmbeddedTrigger initTrigger(Trigger trigger) {
 		EmbeddedTrigger et = null;

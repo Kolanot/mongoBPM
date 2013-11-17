@@ -6,6 +6,7 @@ import java.util.List;
 import org.jbpm.persistence.mongodb.rule.EmbeddedInternalFactHandle;
 
 public class UnificationNode extends EmbeddedTuple {
+	private static final long serialVersionUID = 1L;
 	private boolean openQuery; 
 	private EmbeddedInternalFactHandle factHandle;
 	private List<LeftTupleWithFactHandle> leftTuples;

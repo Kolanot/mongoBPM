@@ -4,6 +4,7 @@ import org.mongodb.morphia.annotations.Serialized;
 
 public class EmbeddedSignalProcessInstanceAction extends
 		EmbeddedWorkingMemoryAction {
+	private static final long serialVersionUID = 1L;
 	private long processInstanceId;
 	private String signalType;
 	@Serialized

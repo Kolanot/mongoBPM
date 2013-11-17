@@ -6,6 +6,7 @@ import java.util.List;
 import org.jbpm.persistence.mongodb.rule.EmbeddedInternalFactHandle;
 
 public class FromNode extends EmbeddedTuple {
+	private static final long serialVersionUID = 1L;
 	private List<EmbeddedInternalFactHandle> matchedFactHandles = new ArrayList<EmbeddedInternalFactHandle>();
 	private List<EmbeddedTuple> rightTuples = new ArrayList<EmbeddedTuple>();
 

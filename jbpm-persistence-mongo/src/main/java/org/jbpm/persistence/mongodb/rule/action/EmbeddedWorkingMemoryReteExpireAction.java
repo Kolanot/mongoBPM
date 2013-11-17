@@ -2,6 +2,7 @@ package org.jbpm.persistence.mongodb.rule.action;
 
 public class EmbeddedWorkingMemoryReteExpireAction extends
 		EmbeddedWorkingMemoryAction {
+	private static final long serialVersionUID = 1L;
 	private int objectTypeNodeId;
 	private int factHandelId;
 	

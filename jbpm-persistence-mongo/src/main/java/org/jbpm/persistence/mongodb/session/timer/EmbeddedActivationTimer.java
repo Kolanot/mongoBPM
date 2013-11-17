@@ -5,6 +5,7 @@ import org.jbpm.persistence.mongodb.rule.EmbeddedActivation;
 import org.mongodb.morphia.annotations.Embedded;
 
 public class EmbeddedActivationTimer extends EmbeddedTimer {
+	private static final long serialVersionUID = 1L;
 	@Embedded
 	private final EmbeddedActivation activation;
 	@Embedded

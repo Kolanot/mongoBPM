@@ -1,14 +1,9 @@
 package org.jbpm.persistence.mongodb.rule.tms;
 
-import java.io.Serializable;
-
 import org.jbpm.persistence.mongodb.object.MongoSerializable;
 import org.jbpm.persistence.mongodb.rule.EmbeddedActivation;
 
 public class EmbeddedLogicalDependency implements java.io.Serializable {
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	private EmbeddedActivation ea;
 	private MongoSerializable objectRef;

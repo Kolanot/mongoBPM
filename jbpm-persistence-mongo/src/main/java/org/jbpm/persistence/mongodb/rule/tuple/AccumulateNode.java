@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.jbpm.persistence.mongodb.rule.EmbeddedInternalFactHandle;
 public class AccumulateNode extends EmbeddedTuple {
+	private static final long serialVersionUID = 1L;
 
 	private EmbeddedInternalFactHandle accctxFactHandle;
 	private Object accumulateContext;

@@ -3,7 +3,11 @@ package org.jbpm.persistence.mongodb.rule;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MongoTupleKey {
+public class MongoTupleKey implements java.io.Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private List<Integer> leftTupleHandleIdList = new ArrayList<Integer>();
 
 	public List<Integer> getLeftTupleHandleIdList() {

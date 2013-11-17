@@ -6,6 +6,7 @@ import org.drools.core.time.Trigger;
 import org.mongodb.morphia.annotations.Embedded;
 
 public class EmbeddedExpireTimer extends EmbeddedTimer {
+	private static final long serialVersionUID = 1L;
 	@Embedded
 	protected EmbeddedTrigger et; 
 	private int factHandleId;

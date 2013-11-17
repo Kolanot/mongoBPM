@@ -4,10 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.jbpm.persistence.mongodb.rule.EmbeddedFactHandle;
-import org.jbpm.persistence.mongodb.rule.memory.EmbeddedAccumulateNodeMemory.Context;
 
 public class EmbeddedFromNodeMemory extends EmbeddedNodeMemory {
-	public static class Context {
+	private static final long serialVersionUID = 1L;
+	public static class Context implements java.io.Serializable {
+		private static final long serialVersionUID = 1L;
 		private final List<EmbeddedFactHandle> handleList = new ArrayList<EmbeddedFactHandle>();
 		private final List<Integer> tupleFactHandleList = new ArrayList<Integer>();
 		

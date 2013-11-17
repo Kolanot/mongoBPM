@@ -7,7 +7,8 @@ import java.util.List;
 import org.drools.core.time.impl.CronTrigger;
 import org.drools.core.time.impl.IntervalTrigger;
 
-public class EmbeddedIntervalTrigger implements EmbeddedTrigger {
+public class EmbeddedIntervalTrigger implements EmbeddedTrigger, java.io.Serializable {
+	private static final long serialVersionUID = 1L;
 	private Date startTime;
 	private Date endTime;
 	private int repeatLimit;

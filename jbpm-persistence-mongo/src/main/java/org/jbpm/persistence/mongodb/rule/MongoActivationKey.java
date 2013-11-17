@@ -5,8 +5,12 @@ import java.util.List;
 
 import org.drools.core.spi.Activation;
 
-public class MongoActivationKey {
-    private final String pkgName;
+public class MongoActivationKey implements java.io.Serializable {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private final String pkgName;
     private final String ruleName;
     private final List<Integer>  tuple;
 

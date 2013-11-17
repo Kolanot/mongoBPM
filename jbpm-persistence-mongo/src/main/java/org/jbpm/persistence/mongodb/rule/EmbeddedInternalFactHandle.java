@@ -9,7 +9,11 @@ import org.jbpm.persistence.mongodb.rule.tuple.EmbeddedTuple;
 import org.mongodb.morphia.annotations.Embedded;
 
 @Embedded
-public class EmbeddedInternalFactHandle {
+public class EmbeddedInternalFactHandle implements java.io.Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private int type;
 	private int id;
 	private long recency;

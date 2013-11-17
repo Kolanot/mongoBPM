@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class JoinNode extends EmbeddedTuple {
+	private static final long serialVersionUID = 1L;
 	private List<EmbeddedTuple> rightTuples = new ArrayList<EmbeddedTuple>();
 
 	public JoinNode(int sinkId) {

@@ -4,6 +4,10 @@ import org.drools.core.common.EventFactHandle;
 import org.drools.core.common.InternalFactHandle;
 
 public class EmbeddedEventFactHandle extends EmbeddedFactHandle {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private long startTimestamp;
     private long duration;
     private boolean expired;

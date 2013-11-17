@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RightInputAdaterNode extends EmbeddedTuple {
+	private static final long serialVersionUID = 1L;
 	private int internalFactHandleId;
 	private long recency;
     private List<Integer> rightTupleIds = new ArrayList<Integer>();

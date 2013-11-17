@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ExistsNode extends EmbeddedTuple {
+	private static final long serialVersionUID = 1L;
 	private List<EmbeddedTuple> leftTuples;
 
 	public ExistsNode(int sinkId, boolean leftTupleBlocked) {

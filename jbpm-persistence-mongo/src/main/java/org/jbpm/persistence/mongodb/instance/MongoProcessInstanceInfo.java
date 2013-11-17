@@ -56,7 +56,7 @@ public class MongoProcessInstanceInfo implements Serializable {
 	protected Map<String, Integer>         iterationLevels = new HashMap<String, Integer>();
 	
 	@Transient
-    transient ProcessInstance                      processInstance;
+    ProcessInstance                      processInstance;
    
     @Transient
     boolean                              modifiedSinceLastSave = false;

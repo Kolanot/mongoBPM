@@ -6,7 +6,9 @@ import java.util.List;
 import org.jbpm.persistence.mongodb.rule.EmbeddedFactHandle;
 
 public class EmbeddedAccumulateNodeMemory extends EmbeddedNodeMemory {
-	public static class Context {
+	private static final long serialVersionUID = 1L;
+	public static class Context implements java.io.Serializable {
+		private static final long serialVersionUID = 1L;
 		private final EmbeddedFactHandle resultFactHandle;
 		private final List<Integer> tupleFactHandleList = new ArrayList<Integer>();
 		public Context(EmbeddedFactHandle resultFactHandle) {

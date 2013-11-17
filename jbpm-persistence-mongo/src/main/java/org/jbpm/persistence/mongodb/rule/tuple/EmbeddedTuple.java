@@ -1,6 +1,7 @@
 package org.jbpm.persistence.mongodb.rule.tuple;
 
-public class EmbeddedTuple {
+public class EmbeddedTuple implements java.io.Serializable {
+	private static final long serialVersionUID = 1L;
 	private final int sinkId;
 	private int factHandleId;
 	protected EmbeddedTuple(int sinkId) {

@@ -1,13 +1,14 @@
 package org.jbpm.persistence.mongodb.instance;
 
-import java.io.Serializable;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.drools.core.process.instance.WorkItem;
 import org.jbpm.persistence.mongodb.workitem.MongoWorkItemInfo;
@@ -17,7 +18,7 @@ import org.mongodb.morphia.annotations.PrePersist;
 import org.mongodb.morphia.annotations.Transient;
 
 @Embedded
-public class MongoProcessData implements Serializable {
+public class MongoProcessData implements Externalizable {
 	/**
 	 * 
 	 */
@@ -38,6 +39,10 @@ public class MongoProcessData implements Serializable {
 	
 	private long processTimerId;
 
+	// for externalization
+	public MongoProcessData() {}
+		
+	
 	@PrePersist
 	void prePersist() {
 		processInstances.clear();
@@ -114,5 +119,45 @@ public class MongoProcessData implements Serializable {
 
 	public void setProcessTimerId(long processTimerId) {
 		this.processTimerId = processTimerId;
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		int instanceCount = in.readInt();
+		for (int i = 0; i < instanceCount; i++) {
+			MongoProcessInstanceInfo instance = (MongoProcessInstanceInfo)in.readObject();
+			processInstances.add(instance);
+		}
+		int closedCount = in.readInt(); 
+		for (int i = 0; i < closedCount; i++) {
+			MongoProcessInstanceInfo instance = (MongoProcessInstanceInfo)in.readObject();
+			closedProcessInstances.add(instance);
+		}
+		int itemCount = in.readInt();
+		for (int i = 0; i < itemCount; i++) {
+			MongoWorkItemInfo item = (MongoWorkItemInfo)in.readObject();
+			workItems.add(item);
+		}
+		processTimerId = in.readLong();
+		postLoad();
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		prePersist();
+		out.writeInt(processInstances.size());
+		for (MongoProcessInstanceInfo instance: processInstances) {
+			out.writeObject(instance);
+		}
+		out.writeInt(closedProcessInstances.size());
+		for (MongoProcessInstanceInfo instance: closedProcessInstances) {
+			out.writeObject(instance);
+		}
+		out.writeInt(workItems.size());
+		for (MongoWorkItemInfo item: workItems) {
+			out.writeObject(item);
+		}
+		out.writeLong(processTimerId);
 	}
 }

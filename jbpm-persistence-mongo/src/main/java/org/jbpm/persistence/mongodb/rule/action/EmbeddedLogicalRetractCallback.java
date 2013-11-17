@@ -5,6 +5,7 @@ import org.jbpm.persistence.mongodb.rule.EmbeddedActivation;
 import org.mongodb.morphia.annotations.Embedded;
 @Embedded
 public class EmbeddedLogicalRetractCallback extends EmbeddedWorkingMemoryAction {
+	private static final long serialVersionUID = 1L;
 	private final int handleId;
 	private final boolean fullyRetract;
 	private final boolean update;

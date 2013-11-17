@@ -1,15 +1,15 @@
 package org.jbpm.persistence.mongodb.rule.action;
 
 import org.jbpm.persistence.mongodb.object.MongoJavaSerializable;
-import org.kie.api.runtime.process.ProcessInstance;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class EmbeddedSignalAction extends EmbeddedWorkingMemoryAction {
+	private static final long serialVersionUID = 1L;
 	@Transient
-    Logger logger = LoggerFactory.getLogger( getClass() );
+    transient static Logger logger = LoggerFactory.getLogger( EmbeddedSignalAction.class );
 	private String signalType;
 	@Embedded
 	private MongoJavaSerializable signal;

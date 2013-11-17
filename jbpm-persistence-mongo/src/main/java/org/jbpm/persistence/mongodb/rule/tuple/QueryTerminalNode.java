@@ -5,6 +5,7 @@ import java.util.List;
 import org.jbpm.persistence.mongodb.rule.EmbeddedInternalFactHandle;
 
 public class QueryTerminalNode extends EmbeddedTuple {
+	private static final long serialVersionUID = 1L;
 	private final EmbeddedInternalFactHandle factHandle;
 	private List<LeftTupleWithFactHandle> leftTuples;
 
