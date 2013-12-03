@@ -76,11 +76,15 @@ import org.jbpm.persistence.mongodb.rule.tms.EmbeddedBeliefSet;
 import org.jbpm.persistence.mongodb.rule.tms.EmbeddedEqualityKey;
 import org.jbpm.persistence.mongodb.rule.tms.EmbeddedLogicalDependency;
 import org.jbpm.persistence.mongodb.rule.tms.EmbeddedTruthMaintenanceSystem;
+import org.jbpm.persistence.mongodb.session.MongoSessionManager;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.Environment;
 import org.kie.api.runtime.rule.EntryPoint;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MongoRuleOutputMarshaller {
+    static Logger logger = LoggerFactory.getLogger( MongoRuleOutputMarshaller.class );
 	public static void serialize(MongoRuleData ruleData, AbstractWorkingMemory wm,
 			KieBase kbase, Environment env) throws ClassNotFoundException,
 			IOException {
@@ -307,7 +311,9 @@ public class MongoRuleOutputMarshaller {
 			LeftTuple leftTuple) {
 		for (LeftTuple entry = leftTuple; entry != null; entry = entry
 				.getParent()) {
-			tupleHandleIds.add(entry.getLastHandle().getId());
+			logger.info("serialize left tuple:" + entry + " lastHandle = " + entry.getLastHandle());
+			if (entry.getLastHandle() != null)
+				tupleHandleIds.add(entry.getLastHandle().getId());
 		}
 	}
 

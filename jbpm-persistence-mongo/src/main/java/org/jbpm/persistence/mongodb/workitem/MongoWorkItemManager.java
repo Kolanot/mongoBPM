@@ -14,7 +14,6 @@ import org.jbpm.persistence.mongodb.MongoSessionStore;
 import org.jbpm.persistence.mongodb.instance.MongoProcessData;
 import org.jbpm.persistence.mongodb.session.MongoSessionInfo;
 import org.jbpm.persistence.mongodb.session.MongoSessionManager;
-import org.jbpm.persistence.mongodb.session.MongoSessionMap;
 import org.kie.api.runtime.process.ProcessInstance;
 import org.kie.api.runtime.process.WorkItemHandler;
 import org.slf4j.Logger;
@@ -70,10 +69,7 @@ public class MongoWorkItemManager implements WorkItemManager {
 	}
 	
 	private MongoSessionInfo getMongoSessionInfoByWorkItemId(long workItemId) {
-		if (!MongoSessionMap.INSTANCE.isWorkItemCached(workItemId)) {
-			sessionManager.reloadWorkItem(workItemId);
-		}
-		MongoSessionInfo sessionInfo = MongoSessionMap.INSTANCE.getSessionByWorkItemId(workItemId);
+		MongoSessionInfo sessionInfo = sessionManager.getSessionByWorkItemId(workItemId);
 		return sessionInfo;
 	}
 
@@ -148,7 +144,7 @@ public class MongoWorkItemManager implements WorkItemManager {
                 processInstance.signalEvent("workItemCompleted", workItem);
             }
             sessionInfo.setModifiedSinceLastSave(true);
-            logger.debug("work item completed, session:" + sessionInfo.getId() + ",work item id: " + workItem.getId());
+            logger.info("work item completed, session:" + sessionInfo.getId() + ",work item id: " + workItem.getId());
         }
     }
 

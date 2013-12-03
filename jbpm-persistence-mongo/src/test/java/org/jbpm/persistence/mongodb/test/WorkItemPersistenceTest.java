@@ -20,7 +20,6 @@ import org.drools.core.process.core.impl.ParameterDefinitionImpl;
 import org.drools.core.process.core.impl.WorkImpl;
 import org.drools.core.reteoo.ReteooRuleBase;
 import org.drools.core.runtime.process.ProcessRuntimeFactory;
-import org.jbpm.persistence.mongodb.MongoProcessStore;
 import org.jbpm.persistence.mongodb.MongoSessionStore;
 import org.jbpm.persistence.mongodb.instance.MongoProcessInstanceInfo;
 import org.jbpm.persistence.mongodb.session.MongoSessionInfo;

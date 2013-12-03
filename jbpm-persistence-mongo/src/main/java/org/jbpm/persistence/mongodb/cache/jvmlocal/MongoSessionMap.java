@@ -21,15 +21,27 @@ import org.kie.internal.process.CorrelationKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MongoSessionMap implements MongoSessionCache{
+public class MongoSessionMap implements MongoSessionCache {
 	private static final Logger log = LoggerFactory.getLogger(MongoSessionMap.class.getName());
-	public static final MongoSessionMap INSTANCE = new MongoSessionMap();
+	private static MongoSessionMap INSTANCE;
 	
 	private Map<Integer, MongoSessionInfo> sessionMap;
 	private Map<Long, Integer> processInstanceIndex;
 	private Map<Long, Integer> workItemIndex;
 	private Map<MongoCorrelationKey, Integer> correlationIndex;
 	private Map<String, Set<Long>> processDefIndex;
+	public static MongoSessionMap getSessionMap() {
+		if (INSTANCE == null) {
+			synchronized(MongoSessionMap.class) {
+		         //double checked locking - because second check of Singleton instance with lock
+					if (INSTANCE == null) {
+					INSTANCE = new MongoSessionMap();
+				}
+			}
+		}
+		return INSTANCE;
+		
+	}
 	private MongoSessionMap() {
 		sessionMap = new HashMap<Integer, MongoSessionInfo>();
 		processInstanceIndex = new HashMap<Long, Integer>();

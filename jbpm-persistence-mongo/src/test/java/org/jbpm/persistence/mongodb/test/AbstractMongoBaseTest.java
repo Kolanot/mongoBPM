@@ -10,6 +10,7 @@ import java.util.List;
 import org.drools.core.audit.WorkingMemoryInMemoryLogger;
 import org.drools.core.base.MapGlobalResolver;
 import org.drools.core.impl.EnvironmentFactory;
+import org.drools.core.impl.StatefulKnowledgeSessionImpl;
 import org.jbpm.persistence.mongodb.MongoKnowledgeService;
 import org.jbpm.persistence.mongodb.MongoSessionStore;
 import org.jbpm.test.AbstractBaseTest;
@@ -175,6 +176,11 @@ public abstract class AbstractMongoBaseTest extends AbstractBaseTest {
     	createNewSession();
         return ksession;
     }
+    protected StatefulKnowledgeSession createKnowledgeSession(String resource) {
+    	createBaseWithClassPathResources(ResourceType.BPMN2, resource);
+    	StatefulKnowledgeSession ksession = createKnowledgeSession(kbase);
+    	return ksession;
+    }
     protected StatefulKnowledgeSession createKnowledgeSession() {
     	createNewSession();
         return ksession;
@@ -199,8 +205,9 @@ public abstract class AbstractMongoBaseTest extends AbstractBaseTest {
     }
 
     protected void disposeKnowledgeSession() {
-    	if (ksession != null)
+    	if (ksession != null) {
     		ksession.dispose();
+    	}
     }
     
     protected StatefulKnowledgeSession reloadKnowledgeSessionByProcessInstanceId(long procInstId) {

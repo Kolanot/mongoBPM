@@ -1,13 +1,8 @@
 package org.jbpm.persistence.mongodb.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
@@ -23,20 +18,17 @@ import org.drools.core.command.runtime.process.CompleteWorkItemCommand;
 import org.drools.core.command.runtime.process.GetProcessInstanceCommand;
 import org.drools.core.command.runtime.process.StartProcessCommand;
 import org.drools.core.definitions.impl.KnowledgePackageImp;
+import org.drools.core.impl.KnowledgeBaseImpl;
 import org.drools.core.impl.StatefulKnowledgeSessionImpl;
 import org.drools.core.process.core.Work;
 import org.drools.core.process.core.impl.WorkImpl;
 import org.drools.core.rule.Package;
-import org.drools.persistence.SingleSessionCommandService;
-import org.drools.persistence.jpa.JpaJDKTimerService;
-import org.drools.persistence.jpa.processinstance.JPAWorkItemManagerFactory;
 import org.jbpm.compiler.ProcessBuilderImpl;
-import org.jbpm.persistence.processinstance.JPAProcessInstanceManagerFactory;
-import org.jbpm.persistence.processinstance.JPASignalManagerFactory;
 import org.jbpm.persistence.mongodb.MongoSingleSessionCommandService;
 import org.jbpm.persistence.mongodb.instance.MongoProcessInstanceManagerFactory;
 import org.jbpm.persistence.mongodb.instance.MongoSignalManagerFactory;
 import org.jbpm.persistence.mongodb.test.object.TestWorkItemHandler;
+import org.jbpm.persistence.mongodb.timer.MongoJDKTimerService;
 import org.jbpm.persistence.mongodb.workitem.MongoWorkItemManagerFactory;
 import org.jbpm.process.core.timer.Timer;
 import org.jbpm.process.instance.InternalProcessRuntime;
@@ -54,14 +46,12 @@ import org.jbpm.workflow.core.node.SubProcessNode;
 import org.jbpm.workflow.core.node.TimerNode;
 import org.jbpm.workflow.core.node.WorkItemNode;
 import org.jbpm.workflow.instance.node.SubProcessNodeInstance;
-import org.junit.After;
 import org.junit.Test;
 import org.kie.api.runtime.Environment;
 import org.kie.api.runtime.conf.TimerJobFactoryOption;
 import org.kie.api.runtime.process.NodeInstance;
 import org.kie.api.runtime.process.ProcessInstance;
 import org.kie.api.runtime.process.WorkItem;
-import org.kie.internal.KnowledgeBase;
 import org.kie.internal.KnowledgeBaseFactory;
 import org.kie.internal.definition.KnowledgePackage;
 import org.slf4j.Logger;
@@ -71,8 +61,6 @@ public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest 
     
     private static final Logger logger = LoggerFactory.getLogger(MongoSingleSessionCommandServiceTest.class);
 
-	private Environment env;
-    
     public void setUp() {
         String testMethodName = Thread.currentThread().getStackTrace()[2].getMethodName();
         if( testMethodName.startsWith("testPersistenceTimer") ) { 
@@ -85,24 +73,25 @@ public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest 
     public void testPersistenceWorkItems() throws Exception {
         setUp();
         
-        KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
+        KnowledgeBaseImpl kbase = (KnowledgeBaseImpl)KnowledgeBaseFactory.newKnowledgeBase();
         Collection<KnowledgePackage> kpkgs = getProcessWorkItems();
         kbase.addKnowledgePackages( kpkgs );
 
         Properties properties = new Properties();
         properties.setProperty( "drools.commandService",
-                                SingleSessionCommandService.class.getName() );
+                                MongoSingleSessionCommandService.class.getName() );
         properties.setProperty( "drools.processInstanceManagerFactory",
-                                JPAProcessInstanceManagerFactory.class.getName() );
+                                MongoProcessInstanceManagerFactory.class.getName() );
         properties.setProperty( "drools.workItemManagerFactory",
-                                JPAWorkItemManagerFactory.class.getName() );
+                                MongoWorkItemManagerFactory.class.getName() );
         properties.setProperty( "drools.processSignalManagerFactory",
-                                JPASignalManagerFactory.class.getName() );
+                                MongoSignalManagerFactory.class.getName() );
         properties.setProperty( "drools.timerService",
-                                JpaJDKTimerService.class.getName() );
+                                MongoJDKTimerService.class.getName() );
         SessionConfiguration config = new SessionConfiguration( properties );
-
-        SingleSessionCommandService service = new SingleSessionCommandService( kbase,
+        
+        Environment env = getEnv();
+        MongoSingleSessionCommandService service = new MongoSingleSessionCommandService( kbase,
                                                                                config,
                                                                                env );
         int sessionId = service.getSessionId();
@@ -117,7 +106,7 @@ public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest 
         assertNotNull( workItem );
         service.dispose();
 
-        service = new SingleSessionCommandService( sessionId,
+        service = new MongoSingleSessionCommandService( sessionId,
                                                    kbase,
                                                    config,
                                                    env );
@@ -127,7 +116,7 @@ public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest 
         assertNotNull( processInstance );
         service.dispose();
 
-        service = new SingleSessionCommandService( sessionId,
+        service = new MongoSingleSessionCommandService( sessionId,
                                                    kbase,
                                                    config,
                                                    env );
@@ -139,7 +128,7 @@ public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest 
         assertNotNull( workItem );
         service.dispose();
 
-        service = new SingleSessionCommandService( sessionId,
+        service = new MongoSingleSessionCommandService( sessionId,
                                                    kbase,
                                                    config,
                                                    env );
@@ -149,7 +138,7 @@ public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest 
         assertNotNull( processInstance );
         service.dispose();
 
-        service = new SingleSessionCommandService( sessionId,
+        service = new MongoSingleSessionCommandService( sessionId,
                                                    kbase,
                                                    config,
                                                    env );
@@ -161,7 +150,7 @@ public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest 
         assertNotNull( workItem );
         service.dispose();
 
-        service = new SingleSessionCommandService( sessionId,
+        service = new MongoSingleSessionCommandService( sessionId,
                                                    kbase,
                                                    config,
                                                    env );
@@ -171,7 +160,7 @@ public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest 
         assertNotNull( processInstance );
         service.dispose();
 
-        service = new SingleSessionCommandService( sessionId,
+        service = new MongoSingleSessionCommandService( sessionId,
                                                    kbase,
                                                    config,
                                                    env );
@@ -183,7 +172,7 @@ public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest 
         assertNull( workItem );
         service.dispose();
 
-        service = new SingleSessionCommandService( sessionId,
+        service = new MongoSingleSessionCommandService( sessionId,
                                                    kbase,
                                                    config,
                                                    env );
@@ -198,24 +187,25 @@ public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest 
     public void testPersistenceWorkItemsUserTransaction() throws Exception {
         setUp();
         
-        KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
+        KnowledgeBaseImpl kbase = (KnowledgeBaseImpl) KnowledgeBaseFactory.newKnowledgeBase();
         Collection<KnowledgePackage> kpkgs = getProcessWorkItems();
         kbase.addKnowledgePackages( kpkgs );
 
         Properties properties = new Properties();
         properties.setProperty( "drools.commandService",
-                                SingleSessionCommandService.class.getName() );
+                                MongoSingleSessionCommandService.class.getName() );
         properties.setProperty( "drools.processInstanceManagerFactory",
-                                JPAProcessInstanceManagerFactory.class.getName() );
+                                MongoProcessInstanceManagerFactory.class.getName() );
         properties.setProperty( "drools.workItemManagerFactory",
-                                JPAWorkItemManagerFactory.class.getName() );
+                                MongoWorkItemManagerFactory.class.getName() );
         properties.setProperty( "drools.processSignalManagerFactory",
-                                JPASignalManagerFactory.class.getName() );
+                                MongoSignalManagerFactory.class.getName() );
         properties.setProperty( "drools.timerService",
-                                JpaJDKTimerService.class.getName() );
+                                MongoJDKTimerService.class.getName() );
         SessionConfiguration config = new SessionConfiguration( properties );
-
-        SingleSessionCommandService service = new SingleSessionCommandService( kbase,
+        
+        Environment env = getEnv();
+        MongoSingleSessionCommandService service = new MongoSingleSessionCommandService( kbase,
                                                                                config,
                                                                                env );
         int sessionId = service.getSessionId();
@@ -233,7 +223,7 @@ public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest 
         assertNotNull( workItem );
         service.dispose();
 
-        service = new SingleSessionCommandService( sessionId,
+        service = new MongoSingleSessionCommandService( sessionId,
                                                    kbase,
                                                    config,
                                                    env );
@@ -245,7 +235,7 @@ public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest 
         ut.commit();
         service.dispose();
 
-        service = new SingleSessionCommandService( sessionId,
+        service = new MongoSingleSessionCommandService( sessionId,
                                                    kbase,
                                                    config,
                                                    env );
@@ -259,7 +249,7 @@ public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest 
         assertNotNull( workItem );
         service.dispose();
 
-        service = new SingleSessionCommandService( sessionId,
+        service = new MongoSingleSessionCommandService( sessionId,
                                                    kbase,
                                                    config,
                                                    env );
@@ -271,7 +261,7 @@ public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest 
         assertNotNull( processInstance );
         service.dispose();
 
-        service = new SingleSessionCommandService( sessionId,
+        service = new MongoSingleSessionCommandService( sessionId,
                                                    kbase,
                                                    config,
                                                    env );
@@ -285,7 +275,7 @@ public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest 
         assertNotNull( workItem );
         service.dispose();
 
-        service = new SingleSessionCommandService( sessionId,
+        service = new MongoSingleSessionCommandService( sessionId,
                                                    kbase,
                                                    config,
                                                    env );
@@ -297,7 +287,7 @@ public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest 
         assertNotNull( processInstance );
         service.dispose();
 
-        service = new SingleSessionCommandService( sessionId,
+        service = new MongoSingleSessionCommandService( sessionId,
                                                    kbase,
                                                    config,
                                                    env );
@@ -311,7 +301,7 @@ public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest 
         assertNull( workItem );
         service.dispose();
 
-        service = new SingleSessionCommandService( sessionId,
+        service = new MongoSingleSessionCommandService( sessionId,
                                                    kbase,
                                                    config,
                                                    env );
@@ -584,8 +574,8 @@ public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest 
         //KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
         
         Collection<KnowledgePackage> kpkgs = getProcessTimer();
-        ((KnowledgeBase)getKBase()).addKnowledgePackages(kpkgs );
 
+        ((KnowledgeBaseImpl)getKBase()).addKnowledgePackages(kpkgs );
         MongoSingleSessionCommandService service = new MongoSingleSessionCommandService( getKBase(),
                                                                                config,
                                                                                getEnv() );
@@ -644,7 +634,7 @@ public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest 
         properties.setProperty( "drools.processSignalManagerFactory",
                                 MongoSignalManagerFactory.class.getName() );
         properties.setProperty( "drools.timerService",
-        						JpaJDKTimerService.class.getName() );
+        						MongoJDKTimerService.class.getName() );
         
         SessionConfiguration config = new SessionConfiguration( properties );
 		return config;
@@ -708,7 +698,7 @@ public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest 
         
         //KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
         Collection<KnowledgePackage> kpkgs = getProcessTimer2();
-        ((KnowledgeBase)getKBase()).addKnowledgePackages(kpkgs );
+        ((KnowledgeBaseImpl)getKBase()).addKnowledgePackages(kpkgs );
 
         MongoSingleSessionCommandService service = new MongoSingleSessionCommandService( getKBase(),
                                                                                config,

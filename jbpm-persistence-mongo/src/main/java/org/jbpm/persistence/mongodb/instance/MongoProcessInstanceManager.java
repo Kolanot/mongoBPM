@@ -7,10 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.drools.core.common.InternalKnowledgeRuntime;
-import org.jbpm.persistence.mongodb.MongoKnowledgeService;
 import org.jbpm.persistence.mongodb.session.MongoSessionManager;
-import org.jbpm.persistence.mongodb.session.MongoSessionMap;
-import org.jbpm.persistence.mongodb.session.MongoSessionNotFoundException;
 import org.jbpm.persistence.mongodb.workitem.MongoWorkItemInfo;
 import org.jbpm.process.instance.InternalProcessRuntime;
 import org.jbpm.process.instance.ProcessInstanceManager;
@@ -138,20 +135,10 @@ public class MongoProcessInstanceManager implements ProcessInstanceManager {
         }
     }
 
-	public ProcessInstance findProcessInstanceByWorkItemId(long workItemId) {
-		MongoWorkItemInfo workItem = MongoSessionMap.INSTANCE.getWorkItem(workItemId);
-		if (workItem == null) {
-			KieSession session = MongoKnowledgeService.loadStatefulKnowledgeSessionByWorkItemId
-					(workItemId, 
-					this.kruntime.getKieBase(), 
-					this.kruntime.getSessionConfiguration(),
-					this.kruntime.getEnvironment());
-			if (session != null) {
-				workItem = MongoSessionMap.INSTANCE.getWorkItem(workItemId);
-			}
-		}
+	public ProcessInstance findProcessInstanceByWorkItemId(long workItemId, boolean readOnly) {
+		MongoWorkItemInfo workItem = sessionManager.getWorkItem(workItemId);
 		if (workItem == null) return null;
-		MongoProcessInstanceInfo procInst = MongoSessionMap.INSTANCE.getProcessInstance(workItem.getProcessInstanceId(), false);
+		MongoProcessInstanceInfo procInst = sessionManager.getProcessInstance(workItem.getProcessInstanceId(), readOnly);
 		if (procInst != null) 
 			return procInst.getProcessInstance();
 		else 
@@ -171,12 +158,7 @@ public class MongoProcessInstanceManager implements ProcessInstanceManager {
     public void removeProcessInstance(ProcessInstance processInstance) {
     	if (processInstance == null) return;
     	long procInstId = processInstance.getId();
-    	if (!MongoSessionMap.INSTANCE.isProcessInstanceCached(procInstId)) {
-    		sessionManager.reloadProcessInstance(procInstId);
-    	} else {
-    		
-    	}
-		MongoSessionMap.INSTANCE.removeProcessInstance(procInstId);
+		sessionManager.removeProcessInstance(procInstId);
         internalRemoveProcessInstance(processInstance);
     }
 }

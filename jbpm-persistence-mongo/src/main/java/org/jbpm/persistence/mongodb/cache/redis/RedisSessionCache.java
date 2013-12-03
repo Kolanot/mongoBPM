@@ -39,7 +39,7 @@ public class RedisSessionCache implements MongoSessionCache {
 	
 	private Jedis jedis = RedisServiceLocator.STANDALONE.getRedis();
 	private Gson gson = new Gson(); 
-	private RedisSessionCache() {}
+	public RedisSessionCache() {}
 	
 	public Set<MongoSessionInfo> getAllSessions() {
 		Set<MongoSessionInfo> allSessions = new HashSet<MongoSessionInfo>();

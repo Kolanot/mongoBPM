@@ -23,6 +23,7 @@ import org.drools.core.RuleBase;
 import org.drools.core.SessionConfiguration;
 import org.drools.core.command.CommandService;
 import org.drools.core.command.Interceptor;
+import org.drools.core.command.impl.AbstractInterceptor;
 import org.drools.core.command.impl.DefaultCommandService;
 import org.drools.core.command.impl.FixedKnowledgeCommandContext;
 import org.drools.core.command.impl.GenericCommand;
@@ -48,7 +49,7 @@ public class MongoSingleSessionCommandService
     implements
     org.drools.core.command.SingleSessionCommandService {
 
-    Logger                             logger = LoggerFactory.getLogger( getClass() );
+    private static Logger logger = LoggerFactory.getLogger( MongoSingleSessionCommandService.class);
 
     private MongoSessionManager        sessionManager;
     private KieSession                 ksession;
@@ -113,7 +114,8 @@ public class MongoSingleSessionCommandService
                                                           this.ksession,
                                                           null );
 
-        this.commandService = new DefaultCommandService(kContext);
+        this.commandService = new TransactionInterceptor(kContext);
+        //this.commandService = new DefaultCommandService(kContext);
 
         ((AcceptsTimerJobFactoryManager) ((InternalKnowledgeRuntime) ksession).getTimerService()).getTimerJobFactoryManager().setCommandService( this );
 
@@ -177,7 +179,8 @@ public class MongoSingleSessionCommandService
                                                               null );
         }
 
-        this.commandService = new DefaultCommandService(kContext);
+        this.commandService = new TransactionInterceptor(kContext);
+        //this.commandService = new DefaultCommandService(kContext);
     }
 
 	public Context getContext() {
@@ -185,56 +188,9 @@ public class MongoSingleSessionCommandService
     }
 
     public synchronized <T> T execute(Command<T> command) {
-        if (command instanceof DisposeCommand) {
-        	int sessionId = ksession.getId();
-        	if (sessionManager.isSessionSaved(sessionId)) {
-        		try {
-        			logger.info("saveCachedSession:"+sessionId);
-        			sessionManager.saveCachedSession(sessionId);
-                } catch ( RuntimeException re ) {
-                    throw re;
-                } catch ( Exception t1 ) {
-                    throw new RuntimeException( "Wrapped exception see cause",
-                                                t1 );
-                }
-        	}
-        
-            T result = commandService.execute( (GenericCommand<T>) command );
-            
-            sessionManager.removeCachedSession(sessionId);
-            return result;
-        }
-
-        try {
-            T result = null;
-            if( command instanceof BatchExecutionCommand ) { 
-                // Batch execution requires the extra logic in 
-                //  StatefulSessionKnowledgeImpl.execute(Context,Command);
-                result = ksession.execute(command);
-            } else { 
-                result = commandService.execute( (GenericCommand<T>) command );
-                sessionManager.saveModifiedSessions();
-            }
-            /*
-            InternalProcessRuntime internalProcessRuntime = ((InternalKnowledgeRuntime) ksession).getProcessRuntime();
-            internalProcessRuntime.clearProcessInstances();
-            ((MongoWorkItemManager) ksession.getWorkItemManager()).clearWorkItems();
-			*/
-            return result;
-
-        } catch ( RuntimeException re ) {
-        	re.printStackTrace();
-            throw re;
-        } catch ( Exception t1 ) {
-        	t1.printStackTrace();
-            throw new RuntimeException( "Wrapped exception see cause",
-                                        t1 );
-        } finally {
-            if ( command instanceof DisposeCommand ) {
-                commandService.execute( (GenericCommand<T>) command );
-            }
-        }
+        return commandService.execute(command);
     }
+
 
     public void dispose() {
         if ( ksession != null ) {
@@ -283,5 +239,65 @@ public class MongoSingleSessionCommandService
 				e.printStackTrace();
 			}
 	    }
+    }
+
+    private class TransactionInterceptor extends AbstractInterceptor {
+
+        public TransactionInterceptor(Context context) {
+            setNext(new DefaultCommandService(context));
+        }
+
+        @Override
+        public synchronized <T> T execute(Command<T> command) {
+            if (command instanceof DisposeCommand) {
+            	int sessionId = ksession.getId();
+            	if (sessionManager.isSessionSaved(sessionId)) {
+            		try {
+            			logger.info("saveCachedSession:"+sessionId);
+            			sessionManager.saveCachedSession(sessionId);
+                    } catch ( RuntimeException re ) {
+                        throw re;
+                    } catch ( Exception t1 ) {
+                        throw new RuntimeException( "Wrapped exception see cause",
+                                                    t1 );
+                    }
+            	}
+            
+                T result = executeNext( (GenericCommand<T>) command );
+                
+                sessionManager.removeCachedSession(sessionId);
+                return result;
+            }
+
+            try {
+                T result = null;
+                if( command instanceof BatchExecutionCommand ) { 
+                    // Batch execution requires the extra logic in 
+                    //  StatefulSessionKnowledgeImpl.execute(Context,Command);
+                    result = ksession.execute(command);
+                } else { 
+                    result = executeNext( (GenericCommand<T>) command );
+                    sessionManager.saveModifiedSessions();
+                }
+                /*
+                InternalProcessRuntime internalProcessRuntime = ((InternalKnowledgeRuntime) ksession).getProcessRuntime();
+                internalProcessRuntime.clearProcessInstances();
+                ((MongoWorkItemManager) ksession.getWorkItemManager()).clearWorkItems();
+    			*/
+                return result;
+
+            } catch ( RuntimeException re ) {
+            	re.printStackTrace();
+                throw re;
+            } catch ( Exception t1 ) {
+            	t1.printStackTrace();
+                throw new RuntimeException( "Wrapped exception see cause",
+                                            t1 );
+            } finally {
+                if ( command instanceof DisposeCommand ) {
+                    executeNext( (GenericCommand<T>) command );
+                }
+            }
+        }
     }
 }

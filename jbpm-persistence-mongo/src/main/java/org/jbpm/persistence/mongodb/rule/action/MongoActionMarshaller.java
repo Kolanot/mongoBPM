@@ -45,7 +45,6 @@ import org.jbpm.persistence.mongodb.rule.EmbeddedActivation;
 import org.jbpm.persistence.mongodb.rule.MongoActivationKey;
 import org.jbpm.persistence.mongodb.rule.MongoActivationsFilter;
 import org.jbpm.persistence.mongodb.rule.MongoRuleData;
-import org.jbpm.persistence.mongodb.session.MongoSessionMap;
 import org.jbpm.process.instance.event.DefaultSignalManager;
 import org.kie.api.runtime.process.ProcessInstance;
 import org.drools.core.spi.RuleFlowGroup;
@@ -184,11 +183,13 @@ public class MongoActionMarshaller {
 			
 			EmbeddedSignalAction esa = (EmbeddedSignalAction)ewma;
 			Object signal = esa.getSignal();
+			/*
 			if (signal instanceof EmbeddedProcessInstance) {
 				long procInstId = ((EmbeddedProcessInstance)signal).getProcessInstanceId();
 				log.info("This is a process instance:" + procInstId);
 				signal = MongoSessionMap.INSTANCE.getProcessInstance(procInstId, false);
 			}
+			*/
 			action = new DefaultSignalManager.SignalAction(esa.getSignalType(),signal);
 			
 		} else if (ewma instanceof EmbeddedSignalProcessInstanceAction) {

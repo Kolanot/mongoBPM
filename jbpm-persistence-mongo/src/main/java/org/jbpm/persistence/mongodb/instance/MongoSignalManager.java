@@ -5,7 +5,6 @@ import java.util.Set;
 
 import org.drools.core.common.InternalKnowledgeRuntime;
 import org.jbpm.persistence.mongodb.session.MongoSessionManager;
-import org.jbpm.persistence.mongodb.session.MongoSessionMap;
 import org.jbpm.process.instance.event.DefaultSignalManager;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.process.ProcessInstance;
@@ -47,7 +46,7 @@ public class MongoSignalManager extends DefaultSignalManager {
 
     private Set<ProcessInstance> getProcessInstancesForEvent(String type) {
     	KieSession session = (KieSession)getKnowledgeRuntime();
-    	return MongoSessionMap.INSTANCE.findProcessInstancesByEvent(session.getId(), type);
+    	return sessionManager.findProcessInstancesByEvent(session.getId(), type);
     }
 
 }

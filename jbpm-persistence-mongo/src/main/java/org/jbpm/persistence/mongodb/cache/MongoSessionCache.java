@@ -17,6 +17,7 @@ import org.kie.api.runtime.process.ProcessInstance;
 import org.kie.internal.process.CorrelationKey;
 
 public interface MongoSessionCache {
+	String cacheKey  = "cache";
 	Collection<MongoSessionInfo> getAllSessions();
 	
 	MongoSessionInfo getCachedSession (int sessionId);

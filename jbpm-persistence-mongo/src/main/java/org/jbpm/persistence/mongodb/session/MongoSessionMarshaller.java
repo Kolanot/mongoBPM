@@ -66,7 +66,7 @@ public class MongoSessionMarshaller {
     	
     	MongoRuleOutputMarshaller.serialize(info.getRuleData(), wm, kbase, env);
     	
-        MongoProcessMarshaller.serialize(info.getProcessdata(), wm);
+        MongoProcessMarshaller.serialize(info.getId(), info.getProcessdata(), wm);
 
         writeTimers(info, wm);
 	}

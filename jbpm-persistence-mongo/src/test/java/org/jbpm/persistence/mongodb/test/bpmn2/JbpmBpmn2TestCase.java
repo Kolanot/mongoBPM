@@ -118,8 +118,10 @@ public abstract class JbpmBpmn2TestCase extends AbstractMongoBaseTest {
     protected KieBase createKnowledgeBase(String... process) throws Exception {
         List<Resource> resources = new ArrayList<Resource>();
         for (int i = 0; i < process.length; ++i) {
-            //String p = process[i];
-            resources.addAll(buildAndDumpBPMN2Process(process[i]));
+            String p = process[i];
+            if (p.startsWith("BPMN2-")) p = "bpmn2/" + p;
+            log.info("process file path:" + p);
+            resources.addAll(buildAndDumpBPMN2Process(p));
         }
         return createKnowledgeBaseFromResources(resources.toArray(new Resource[resources.size()]));
     }
@@ -128,6 +130,7 @@ public abstract class JbpmBpmn2TestCase extends AbstractMongoBaseTest {
         Resource[] resources = new Resource[process.length];
         for (int i = 0; i < process.length; ++i) {
             String p = process[i];
+            if (p.startsWith("BPMN2-")) p = "bpmn2/" + p;
             resources[i] = (ResourceFactory.newClassPathResource(p));
         }
         return createKnowledgeBaseFromResources(resources);
@@ -440,7 +443,7 @@ public abstract class JbpmBpmn2TestCase extends AbstractMongoBaseTest {
                 actualValue = value.toString();
         //    }
         } 
-        result = varName.equals(actualValue);
+        result = varValue.equals(actualValue);
         if(!result) {
             fail("Variable " + varName + " value missmatch - expected " + varValue + " actual " + actualValue);
         }

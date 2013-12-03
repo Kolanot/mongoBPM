@@ -11,8 +11,11 @@ import org.drools.core.common.InternalKnowledgeRuntime;
 import org.jbpm.persistence.mongodb.MongoKnowledgeService;
 import org.jbpm.persistence.mongodb.MongoPersistUtil;
 import org.jbpm.persistence.mongodb.MongoSessionStore;
+import org.jbpm.persistence.mongodb.cache.MongoSessionCache;
+import org.jbpm.persistence.mongodb.cache.MongoSessionCacheLocator;
 import org.jbpm.persistence.mongodb.instance.MongoProcessData;
 import org.jbpm.persistence.mongodb.instance.MongoProcessInstanceInfo;
+import org.jbpm.persistence.mongodb.workitem.MongoWorkItemInfo;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.Environment;
 import org.kie.api.runtime.KieSession;
@@ -24,12 +27,13 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 public class MongoSessionManager {
-    Logger logger = LoggerFactory.getLogger( getClass() );
+    static Logger logger = LoggerFactory.getLogger( MongoSessionManager.class );
     private MongoSessionMarshaller marshaller;
 	private MongoSessionStore store;
 	private KieBase kbase;
     private final Environment env;
     private final KieSessionConfiguration conf;
+    private MongoSessionCache sessionCache;
     
     public MongoSessionManager(InternalKnowledgeRuntime kruntime) {
     	this(kruntime.getKieBase(), kruntime.getSessionConfiguration(), kruntime.getEnvironment());
@@ -41,14 +45,15 @@ public class MongoSessionManager {
 		this.conf = conf;
 		this.kbase = kbase;
 		store = ((MongoSessionStore) env.get( MongoSessionStore.envKey ));
+		sessionCache = MongoSessionCacheLocator.valueOf((String) env.get(MongoSessionCache.cacheKey)).getCache();
 	}
 	
 	private MongoSessionInfo getCachedSession(int sessionId) {
-		return MongoSessionMap.INSTANCE.getCachedSession(sessionId);
+		return sessionCache.getCachedSession(sessionId);
 	}
 	
 	public void removeCachedSession(int sessionId) {
-		MongoSessionMap.INSTANCE.removeCachedSession(sessionId);
+		sessionCache.removeCachedSession(sessionId);
 	}
 	
 	public KieSession getSession(int sessionId) 
@@ -77,7 +82,7 @@ public class MongoSessionManager {
 		if (sessionInfo == null) {
 			sessionInfo = store.findSessionInfo(sessionId);
 			if (sessionInfo != null) {
-				MongoSessionMap.INSTANCE.addSession(sessionInfo);
+				sessionCache.addSession(sessionInfo);
 			} else {
 	            throw new MongoSessionNotFoundException( "Could not find session data for id " + sessionId);
 			}
@@ -97,7 +102,7 @@ public class MongoSessionManager {
 
 	public Set<ProcessInstance> getAllProcessInstances() {
 		Set<ProcessInstance> instances = new HashSet<ProcessInstance>();
-		Collection<MongoSessionInfo> sessions = MongoSessionMap.INSTANCE.getAllSessions();
+		Collection<MongoSessionInfo> sessions = sessionCache.getAllSessions();
 		for (MongoSessionInfo sessionInfo:sessions){
 			MongoProcessData procData = sessionInfo.getProcessdata();
 			if (procData != null) {
@@ -110,7 +115,7 @@ public class MongoSessionManager {
 	}
 	
 	public void addProcessInstance(KieSession session, ProcessInstance processInstance, CorrelationKey correlationKey) {
-		MongoSessionInfo sessionInfo = MongoSessionMap.INSTANCE.getCachedSession(session.getId());
+		MongoSessionInfo sessionInfo = sessionCache.getCachedSession(session.getId());
         MongoProcessInstanceInfo processInstanceInfo = new MongoProcessInstanceInfo(processInstance);
         if (correlationKey != null) 
         	processInstanceInfo.assignCorrelationKey(correlationKey);
@@ -123,9 +128,12 @@ public class MongoSessionManager {
 
         sessionInfo.addProcessInstance(processInstanceInfo);
         sessionInfo.setModifiedSinceLastSave(true);
-        MongoSessionMap.INSTANCE.addSession(sessionInfo);
+        sessionCache.addSession(sessionInfo);
 	}
 	
+	public Set<ProcessInstance> findProcessInstancesByEvent(int sessionId, String type) {
+		return sessionCache.findProcessInstancesByEvent(sessionId, type);
+	}
     public void saveCachedSession(int sessionId) throws ClassNotFoundException, IOException {
         MongoSessionInfo sessionInfo = getCachedSession(sessionId);
         if (sessionInfo == null) return;
@@ -137,11 +145,11 @@ public class MongoSessionManager {
     }
     
     public void saveModifiedSessions() throws ClassNotFoundException, IOException {
-        for (MongoSessionInfo session : MongoSessionMap.INSTANCE.getAllSessions()) {
+        for (MongoSessionInfo session : sessionCache.getAllSessions()) {
         	if (session.isModifiedSinceLastSave()) {
         		marshaller.syncSnapshot(session);
         		session.setLastModificationDate(new java.util.Date());
-        		logger.debug("MongoSessionManager.saveModifiedSessions, session saved, sessionId " + session.getId() );
+        		logger.info("MongoSessionManager.saveModifiedSessions, session saved, sessionId " + session.getId() );
         		store.saveOrUpdate(session);	
         	}
         } 
@@ -152,16 +160,16 @@ public class MongoSessionManager {
     	store.saveNew(sessionInfo);
     	if (session instanceof InternalKnowledgeRuntime)
     		((InternalKnowledgeRuntime) session).setId(sessionInfo.getId());
-    	MongoSessionMap.INSTANCE.addSession(sessionInfo);
+    	sessionCache.addSession(sessionInfo);
     }
     
     public MongoProcessInstanceInfo findProcessInstanceByCorrelationKey(CorrelationKey corKey) {
-		MongoProcessInstanceInfo procInst = MongoSessionMap.INSTANCE.findProcessInstanceByCorrelationKey(corKey);
+		MongoProcessInstanceInfo procInst = sessionCache.findProcessInstanceByCorrelationKey(corKey);
 		if (procInst == null) {
 			try {
 				int sessionId = findSessionIdbyProcessCorelationKey(corKey);
 				reloadKnowledgeSession(sessionId);
-				procInst = MongoSessionMap.INSTANCE.findProcessInstanceByCorrelationKey(corKey);
+				procInst = sessionCache.findProcessInstanceByCorrelationKey(corKey);
 			} catch (MongoSessionNotFoundException e) {
 				return null;
 			}
@@ -179,7 +187,7 @@ public class MongoSessionManager {
 			logger.info("This should be in a different session, currrent session is " + session.getId());
 			return null;
 		}
-		if (!MongoSessionMap.INSTANCE.isSessionCached(sessionIdFromProcId)) {
+		if (!sessionCache.isSessionCached(sessionIdFromProcId)) {
 			try {
 				addSession(session);
 			} catch (ClassNotFoundException e) {
@@ -190,7 +198,7 @@ public class MongoSessionManager {
 				return null;
 			}
 		}
-		MongoProcessInstanceInfo procInst = MongoSessionMap.INSTANCE.getProcessInstance(procInstId, readOnly);
+		MongoProcessInstanceInfo procInst = sessionCache.getProcessInstance(procInstId, readOnly);
 		if (procInst != null)  {
 			return procInst;
 		} else 
@@ -214,7 +222,35 @@ public class MongoSessionManager {
     	MongoKnowledgeService.loadStatefulKnowledgeSessionByProcessInstanceId(procInstId, kbase, conf, env);
     }
 
+	public MongoProcessInstanceInfo getProcessInstance(long procInstId, boolean readOnly) {
+		if (!sessionCache.isProcessInstanceCached(procInstId)) {
+			MongoKnowledgeService.loadStatefulKnowledgeSessionByProcessInstanceId(procInstId, kbase, conf, env);
+		}
+		return sessionCache.getProcessInstance(procInstId, readOnly);
+    }
+
+	public void removeProcessInstance(long procInstId) {
+		if (!sessionCache.isProcessInstanceCached(procInstId)) {
+			MongoKnowledgeService.loadStatefulKnowledgeSessionByProcessInstanceId(procInstId, kbase, conf, env);
+		}
+		sessionCache.removeProcessInstance(procInstId);
+    }
+
 	public void reloadWorkItem(long workItemId) {
     	MongoKnowledgeService.loadStatefulKnowledgeSessionByWorkItemId(workItemId, kbase, conf, env);
+    }
+	
+	public MongoSessionInfo getSessionByWorkItemId(long workItemId) {
+		if (!sessionCache.isWorkItemCached(workItemId)) {
+			MongoKnowledgeService.loadStatefulKnowledgeSessionByWorkItemId(workItemId, kbase, conf, env);
+		}
+		return sessionCache.getSessionByWorkItemId(workItemId);
+    }
+	
+	public MongoWorkItemInfo getWorkItem(long workItemId) {
+		if (!sessionCache.isWorkItemCached(workItemId)) {
+			MongoKnowledgeService.loadStatefulKnowledgeSessionByWorkItemId(workItemId, kbase, conf, env);
+		}
+    	return sessionCache.getWorkItem(workItemId);
     }
 }

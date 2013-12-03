@@ -31,7 +31,7 @@
     <boundaryEvent id="_4" name="BoundaryEvent" attachedToRef="_2">
       <outgoing>_4-_5</outgoing>
       <conditionalEventDefinition id="ConditionalEventDefinition_1">
-        <condition xsi:type="tFormalExpression" id="FormalExpression_1" language="http://www.jboss.org/drools/rule">org.jbpm.bpmn2.objects.Person(name == &quot;john&quot;)</condition>
+        <condition xsi:type="tFormalExpression" id="FormalExpression_1" language="http://www.jboss.org/drools/rule">org.jbpm.persistence.mongodb.test.object.Person(name == &quot;john&quot;)</condition>
       </conditionalEventDefinition>
     </boundaryEvent>
     <scriptTask id="_5" name="Goodbye">

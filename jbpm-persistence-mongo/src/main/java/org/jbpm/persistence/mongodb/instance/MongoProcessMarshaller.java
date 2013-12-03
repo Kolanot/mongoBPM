@@ -14,8 +14,10 @@ import org.drools.core.common.AbstractWorkingMemory;
 import org.drools.core.common.InternalKnowledgeRuntime;
 import org.drools.core.process.instance.WorkItemManager;
 import org.jbpm.marshalling.impl.JBPMMessages;
+import org.jbpm.persistence.mongodb.MongoPersistUtil;
 import org.jbpm.persistence.mongodb.instance.MongoProcessInstanceInfo.EmbeddedNodeInstance;
 import org.jbpm.persistence.mongodb.object.MongoJavaSerializable;
+import org.jbpm.persistence.mongodb.session.MongoSessionManager;
 import org.jbpm.persistence.mongodb.workitem.MongoWorkItemInfo;
 import org.jbpm.process.core.Context;
 import org.jbpm.process.core.context.exclusive.ExclusiveGroup;
@@ -49,13 +51,16 @@ import org.kie.api.runtime.process.NodeInstanceContainer;
 import org.drools.core.process.instance.WorkItem;
 import org.kie.api.runtime.process.WorkflowProcessInstance;
 import org.mongodb.morphia.annotations.Embedded;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MongoProcessMarshaller {
-	public static void serialize (MongoProcessData processData, AbstractWorkingMemory wm) 
+    static Logger logger = LoggerFactory.getLogger( MongoProcessMarshaller.class );	
+	public static void serialize (int sessionId, MongoProcessData processData, AbstractWorkingMemory wm) 
 			throws IOException	{
-		serializeProcessInstances( processData, wm );
+		serializeProcessInstances(sessionId, processData, wm );
         
-		serializeWorkItems(processData, wm);
+		serializeWorkItems(sessionId, processData, wm);
         
 		// this now just assigns the writer, it will not write out any timer information
         serializeProcessTimers(processData, wm);
@@ -73,13 +78,15 @@ public class MongoProcessMarshaller {
 			
 		}
 	}
-    private static void serializeProcessInstances(MongoProcessData processData,AbstractWorkingMemory wm) throws NotSerializableException {
+    private static void serializeProcessInstances(int sessionId, MongoProcessData processData,AbstractWorkingMemory wm) throws NotSerializableException {
         List<org.kie.api.runtime.process.ProcessInstance> processInstances = new ArrayList<org.kie.api.runtime.process.ProcessInstance>( wm.getProcessInstances() );
 
         for ( org.kie.api.runtime.process.ProcessInstance processInstance : processInstances ) {
         	if (processInstance == null) continue;
+        	if (MongoPersistUtil.resolveSessionIdFromPairing(processInstance.getId()) != sessionId) continue;
             MongoProcessInstanceInfo instance = processData.getProcessInstance(processInstance.getId());
             if (instance == null) {
+            	logger.info("add new instance: " + processInstance.getId());
         		instance = new MongoProcessInstanceInfo(processInstance);
                 processData.addProcessInstance(instance);
             }
@@ -100,10 +107,11 @@ public class MongoProcessMarshaller {
     	}
     }
 
-    private static void serializeWorkItems(MongoProcessData processData,AbstractWorkingMemory wm) throws NotSerializableException {
+    private static void serializeWorkItems(int sessionId, MongoProcessData processData,AbstractWorkingMemory wm) throws NotSerializableException {
     	if (((WorkItemManager) wm.getWorkItemManager()).getWorkItems() == null) return; 
         List<WorkItem> workItems = new ArrayList<WorkItem>( ((WorkItemManager) wm.getWorkItemManager()).getWorkItems() );
         for ( WorkItem workItem : workItems ) {
+        	if (MongoPersistUtil.resolveSessionIdFromPairing(workItem.getId()) != sessionId) continue;
         	MongoWorkItemInfo wii = new MongoWorkItemInfo(workItem);
         	processData.addWorkItem(wii);
         }
