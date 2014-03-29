@@ -17,7 +17,6 @@ package org.jbpm.persistence.mongodb;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Date;
 
 import org.drools.core.RuleBase;
 import org.drools.core.SessionConfiguration;
@@ -33,12 +32,12 @@ import org.drools.core.common.EndOperationListener;
 import org.drools.core.common.InternalKnowledgeRuntime;
 import org.drools.core.impl.KnowledgeBaseImpl;
 import org.drools.core.time.AcceptsTimerJobFactoryManager;
-import org.jbpm.persistence.mongodb.session.MongoSessionManager;
+import org.jbpm.persistence.mongodb.workitem.MongoWorkItemManager;
+import org.jbpm.process.instance.InternalProcessRuntime;
 import org.kie.api.KieBase;
 import org.kie.api.command.BatchExecutionCommand;
 import org.kie.api.command.Command;
 import org.kie.internal.command.Context;
-import org.kie.internal.runtime.StatefulKnowledgeSession;
 import org.kie.api.runtime.Environment;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.KieSessionConfiguration;
@@ -51,7 +50,6 @@ public class MongoSingleSessionCommandService
 
     private static Logger logger = LoggerFactory.getLogger( MongoSingleSessionCommandService.class);
 
-    private MongoSessionManager        sessionManager;
     private KieSession                 ksession;
     private Environment                env;
     private KnowledgeCommandContext    kContext;
@@ -59,10 +57,9 @@ public class MongoSingleSessionCommandService
     private KieSessionConfiguration    conf;
     private KieBase                    kbase;
 
-
     public void checkEnvironment(Environment env) {
-        if ( env.get(MongoSessionStore.envKey ) == null) {
-            throw new IllegalArgumentException( "Environment must have an MongoSessionStore instance" );
+        if ( env.get(MongoProcessStore.envKey ) == null) {
+            throw new IllegalArgumentException( "Environment must have an MongoProcessStore instance" );
         }
     }
 
@@ -82,6 +79,7 @@ public class MongoSingleSessionCommandService
     public MongoSingleSessionCommandService(KieBase kbase,
                                        KieSessionConfiguration conf,
                                        Environment env) throws ClassNotFoundException, IOException {
+    	logger.info("enter MongoSingleSessionCommandService");
         if ( conf == null ) {
             conf = new SessionConfiguration();
         }
@@ -91,16 +89,9 @@ public class MongoSingleSessionCommandService
 
         checkEnvironment(this.env);
 
-        sessionManager = new MongoSessionManager(kbase, conf, env);
-
         initNewKnowledgeSession();
 
         // update the session id to be the same as the session info id
-        /*
-        MongoSessionStore store = ((MongoSessionStore) this.env.get( MongoSessionStore.envKey ));
-        int sessionId = store.getNextSessionId();
-        ((InternalKnowledgeRuntime) ksession).setId( sessionId);
-        */
     }
 
     protected void initNewKnowledgeSession() throws ClassNotFoundException, IOException { 
@@ -115,12 +106,10 @@ public class MongoSingleSessionCommandService
                                                           null );
 
         this.commandService = new TransactionInterceptor(kContext);
-        //this.commandService = new DefaultCommandService(kContext);
 
         ((AcceptsTimerJobFactoryManager) ((InternalKnowledgeRuntime) ksession).getTimerService()).getTimerJobFactoryManager().setCommandService( this );
 
-        this.sessionManager.addSession(this.ksession);
-        ((InternalKnowledgeRuntime) this.ksession).setEndOperationListener( new EndOperationListenerImpl( sessionManager, this.ksession.getId() ) );
+        ((InternalKnowledgeRuntime) this.ksession).setEndOperationListener( new EndOperationListenerImpl( ) );
     }
     
     public MongoSingleSessionCommandService(Integer sessionId,
@@ -137,7 +126,6 @@ public class MongoSingleSessionCommandService
         
         checkEnvironment( this.env );
         
-        sessionManager = new MongoSessionManager(kbase, conf, env);
         // update the session id to be the same as the session info id
         //this.sessionId = sessionId;
 
@@ -157,8 +145,6 @@ public class MongoSingleSessionCommandService
             // nothing to initialize
         }
         // if this.ksession is null, it'll create a new one, else it'll use the existing one
-        this.ksession = (StatefulKnowledgeSession) sessionManager.getSession(sessionId);
-        
 
         // The CommandService for the TimerJobFactoryManager must be set before any timer jobs are scheduled. 
         // Otherwise, if overdue jobs are scheduled (and then run before the .commandService field can be set), 
@@ -168,7 +154,7 @@ public class MongoSingleSessionCommandService
         // update the session id to be the same as the session info id
         //((InternalKnowledgeRuntime) ksession).setId( this.sessionInfo.getId() );
 
-        ((InternalKnowledgeRuntime) this.ksession).setEndOperationListener( new EndOperationListenerImpl( sessionManager, sessionId ) );
+        ((InternalKnowledgeRuntime) this.ksession).setEndOperationListener( new EndOperationListenerImpl() );
 
         if ( this.kContext == null ) {
             // this should only happen when this class is first constructed
@@ -180,7 +166,6 @@ public class MongoSingleSessionCommandService
         }
 
         this.commandService = new TransactionInterceptor(kContext);
-        //this.commandService = new DefaultCommandService(kContext);
     }
 
 	public Context getContext() {
@@ -220,24 +205,11 @@ public class MongoSingleSessionCommandService
     public static class EndOperationListenerImpl
     implements
     EndOperationListener {
-	    private MongoSessionManager sessionManager;
-	    private int sessionId;
 	
-	    public EndOperationListenerImpl(MongoSessionManager sessionManager, int sessionId) {
-	        this.sessionId = sessionId;
-	        this.sessionManager = sessionManager;
+	    public EndOperationListenerImpl() {
 	    }
 	
 	    public void endOperation(InternalKnowledgeRuntime kruntime) {
-	        try {
-				this.sessionManager.setSessionUpdated(this.sessionId, new Date( kruntime.getLastIdleTimestamp() ) );
-			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 	    }
     }
 
@@ -250,22 +222,7 @@ public class MongoSingleSessionCommandService
         @Override
         public synchronized <T> T execute(Command<T> command) {
             if (command instanceof DisposeCommand) {
-            	int sessionId = ksession.getId();
-            	if (sessionManager.isSessionSaved(sessionId)) {
-            		try {
-            			logger.info("saveCachedSession:"+sessionId);
-            			sessionManager.saveCachedSession(sessionId);
-                    } catch ( RuntimeException re ) {
-                        throw re;
-                    } catch ( Exception t1 ) {
-                        throw new RuntimeException( "Wrapped exception see cause",
-                                                    t1 );
-                    }
-            	}
-            
                 T result = executeNext( (GenericCommand<T>) command );
-                
-                sessionManager.removeCachedSession(sessionId);
                 return result;
             }
 
@@ -277,13 +234,12 @@ public class MongoSingleSessionCommandService
                     result = ksession.execute(command);
                 } else { 
                     result = executeNext( (GenericCommand<T>) command );
-                    sessionManager.saveModifiedSessions();
                 }
-                /*
-                InternalProcessRuntime internalProcessRuntime = ((InternalKnowledgeRuntime) ksession).getProcessRuntime();
+                
+                InternalProcessRuntime internalProcessRuntime = (InternalProcessRuntime) ((InternalKnowledgeRuntime) ksession).getProcessRuntime();
                 internalProcessRuntime.clearProcessInstances();
                 ((MongoWorkItemManager) ksession.getWorkItemManager()).clearWorkItems();
-    			*/
+    			
                 return result;
 
             } catch ( RuntimeException re ) {

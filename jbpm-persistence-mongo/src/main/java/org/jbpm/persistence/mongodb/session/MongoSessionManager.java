@@ -121,7 +121,7 @@ public class MongoSessionManager {
         	processInstanceInfo.assignCorrelationKey(correlationKey);
         
         long procInstId = store.getNextProcessInstanceId();
-        procInstId = MongoPersistUtil.pairingSessionId(sessionInfo.getId(), procInstId);
+        procInstId = MongoPersistUtil.pairingTwoIDs(sessionInfo.getId(), procInstId);
         processInstanceInfo.setProcessInstanceId(procInstId);
         ((org.jbpm.process.instance.ProcessInstance) processInstance).setId( processInstanceInfo.getProcessInstanceId() );
         processInstanceInfo.setProcessId(processInstance.getProcessId());
@@ -181,7 +181,7 @@ public class MongoSessionManager {
     }
 
 	public MongoProcessInstanceInfo findCachedProcessInstance(KieSession session, long procInstId, boolean readOnly) {
-		int sessionIdFromProcId = MongoPersistUtil.resolveSessionIdFromPairing(procInstId);
+		int sessionIdFromProcId = MongoPersistUtil.resolveFirstIdFromPairing(procInstId);
 		
 		if (session.getId() != sessionIdFromProcId) {
 			logger.info("This should be in a different session, currrent session is " + session.getId());

@@ -26,9 +26,9 @@ import org.drools.core.rule.Package;
 import org.jbpm.compiler.ProcessBuilderImpl;
 import org.jbpm.persistence.mongodb.MongoSingleSessionCommandService;
 import org.jbpm.persistence.mongodb.instance.MongoProcessInstanceManagerFactory;
-import org.jbpm.persistence.mongodb.instance.MongoSignalManagerFactory;
+import org.jbpm.persistence.mongodb.signal.MongoSignalManagerFactory;
 import org.jbpm.persistence.mongodb.test.object.TestWorkItemHandler;
-import org.jbpm.persistence.mongodb.timer.MongoJDKTimerService;
+//import org.jbpm.persistence.mongodb.timer.MongoJDKTimerService;
 import org.jbpm.persistence.mongodb.workitem.MongoWorkItemManagerFactory;
 import org.jbpm.process.core.timer.Timer;
 import org.jbpm.process.instance.InternalProcessRuntime;
@@ -86,8 +86,8 @@ public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest 
                                 MongoWorkItemManagerFactory.class.getName() );
         properties.setProperty( "drools.processSignalManagerFactory",
                                 MongoSignalManagerFactory.class.getName() );
-        properties.setProperty( "drools.timerService",
-                                MongoJDKTimerService.class.getName() );
+        //properties.setProperty( "drools.timerService",
+        //                        MongoJDKTimerService.class.getName() );
         SessionConfiguration config = new SessionConfiguration( properties );
         
         Environment env = getEnv();
@@ -200,8 +200,8 @@ public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest 
                                 MongoWorkItemManagerFactory.class.getName() );
         properties.setProperty( "drools.processSignalManagerFactory",
                                 MongoSignalManagerFactory.class.getName() );
-        properties.setProperty( "drools.timerService",
-                                MongoJDKTimerService.class.getName() );
+        //properties.setProperty( "drools.timerService",
+        //                        MongoJDKTimerService.class.getName() );
         SessionConfiguration config = new SessionConfiguration( properties );
         
         Environment env = getEnv();
@@ -633,8 +633,8 @@ public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest 
                                 MongoWorkItemManagerFactory.class.getName() );
         properties.setProperty( "drools.processSignalManagerFactory",
                                 MongoSignalManagerFactory.class.getName() );
-        properties.setProperty( "drools.timerService",
-        						MongoJDKTimerService.class.getName() );
+        //properties.setProperty( "drools.timerService",
+        //						MongoJDKTimerService.class.getName() );
         
         SessionConfiguration config = new SessionConfiguration( properties );
 		return config;

@@ -11,18 +11,18 @@ public class MongoPersistUtil {
     /*
      * http://en.wikipedia.org/wiki/Cantor_pairing_function#Cantor_pairing_function
      */
-    public static long pairingSessionId(int sessionId, long itemId) {
-    	long w = sessionId+itemId;
+    public static long pairingTwoIDs(long firstId, long secondId) {
+    	long w = firstId+secondId;
     	long t = w * (w + 1)/2;
-    	return t +itemId; 
+    	return t + secondId; 
     }
 
-    public static int resolveSessionIdFromPairing(long pairId) {
+    public static long resolveFirstIdFromPairing(long pairId) {
     	long w = (long) Math.floor((Math.sqrt((8*pairId+1) - 1)/2));
     	long t = w * (w + 1)/2;
     	long wi = pairId -t;
-    	long sessionId = w - wi;
-    	return (int)sessionId; 
+    	long firstId = w - wi;
+    	return firstId; 
     }
 
     public static byte[] serialize(Object obj) throws IOException {

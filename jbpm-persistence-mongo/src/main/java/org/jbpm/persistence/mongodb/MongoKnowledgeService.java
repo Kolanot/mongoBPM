@@ -36,7 +36,7 @@ public class MongoKnowledgeService {
 		(long procInstId,
 			KieBase kbase, KieSessionConfiguration configuration,
 			Environment environment) {
-		long sessionId = MongoPersistUtil.resolveSessionIdFromPairing(procInstId);
+		long sessionId = MongoPersistUtil.resolveFirstIdFromPairing(procInstId);
 		return (StatefulKnowledgeSession) getMongoKnowledgeServiceProvider()
 				.loadKieSession((int)sessionId, kbase, configuration, environment);
 	}
@@ -45,7 +45,7 @@ public class MongoKnowledgeService {
 		(long workItemId,
 			KieBase kbase, KieSessionConfiguration configuration,
 			Environment environment) {
-		long sessionId = MongoPersistUtil.resolveSessionIdFromPairing(workItemId);
+		long sessionId = MongoPersistUtil.resolveFirstIdFromPairing(workItemId);
 		return (StatefulKnowledgeSession) getMongoKnowledgeServiceProvider()
 				.loadKieSession((int)sessionId, kbase, configuration, environment);
 	}

@@ -6,7 +6,7 @@ import org.jboss.logging.Logger;
 import org.jbpm.persistence.mongodb.correlation.MongoCorrelationKey;
 import org.jbpm.persistence.mongodb.correlation.MongoCorrelationProperty;
 import org.jbpm.persistence.mongodb.instance.MongoProcessInstanceId;
-import org.jbpm.persistence.mongodb.object.SessionObjectPersistenceStrategy;
+import org.jbpm.persistence.mongodb.object.ProcessObjectPersistenceStrategy;
 import org.jbpm.persistence.mongodb.session.MongoSessionId;
 import org.jbpm.persistence.mongodb.session.MongoSessionInfo;
 import org.jbpm.persistence.mongodb.workitem.MongoWorkItemId;
@@ -158,7 +158,7 @@ public class MongoSessionStore {
 		return ds.get(entityClass, id);
 	}
 	
-	public List<SessionObjectPersistenceStrategy> getAllPersistenceStrategies() {
-		return ds.find(SessionObjectPersistenceStrategy.class).asList();
+	public List<ProcessObjectPersistenceStrategy> getAllPersistenceStrategies() {
+		return ds.find(ProcessObjectPersistenceStrategy.class).asList();
 	}
 }

@@ -13,7 +13,7 @@ import org.mongodb.morphia.annotations.Transient;
 
 @Polymorphic
 public class MongoEntityPersistenceStrategy implements
-		SessionObjectPersistenceStrategy, Serializable{
+		ProcessObjectPersistenceStrategy, Serializable{
 	/**
 	 * 
 	 */

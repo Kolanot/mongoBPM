@@ -1,4 +1,4 @@
-package org.jbpm.persistence.mongodb.instance;
+package org.jbpm.persistence.mongodb.signal;
 
 import org.drools.core.common.InternalKnowledgeRuntime;
 import org.jbpm.process.instance.event.SignalManager;

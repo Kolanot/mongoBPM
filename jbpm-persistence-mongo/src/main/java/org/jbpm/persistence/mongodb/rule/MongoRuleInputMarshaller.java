@@ -42,7 +42,7 @@ import org.drools.core.spi.PropagationContext;
 import org.jbpm.persistence.mongodb.MongoSessionStore;
 import org.jbpm.persistence.mongodb.object.MongoSerializable;
 import org.jbpm.persistence.mongodb.object.PersistenceStrategyHelper;
-import org.jbpm.persistence.mongodb.object.SessionObjectPersistenceStrategy;
+import org.jbpm.persistence.mongodb.object.ProcessObjectPersistenceStrategy;
 import org.jbpm.persistence.mongodb.rule.EmbeddedAgenda.EmbeddedAgendaGroup;
 import org.jbpm.persistence.mongodb.rule.action.EmbeddedWorkingMemoryAction;
 import org.jbpm.persistence.mongodb.rule.action.MongoActionMarshaller;
@@ -179,7 +179,7 @@ public class MongoRuleInputMarshaller {
 			EntryPoint entryPoint, EmbeddedFactHandle efh) throws IOException,
 			ClassNotFoundException, IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
 		MongoSerializable objectRef = efh.getObjectRef();
-		SessionObjectPersistenceStrategy strategy = PersistenceStrategyHelper
+		ProcessObjectPersistenceStrategy strategy = PersistenceStrategyHelper
 				.getStrategy(store, objectRef.getSerializationStrategyClass());
 		Object object = strategy.deserialize(objectRef);
 
@@ -283,12 +283,12 @@ public class MongoRuleInputMarshaller {
 							.getTuplesCache().get(ak).getObject();
 
 					MongoSessionStore store = getSessionStore(wm);
-					SessionObjectPersistenceStrategy objectStrategy = PersistenceStrategyHelper
+					ProcessObjectPersistenceStrategy objectStrategy = PersistenceStrategyHelper
 							.getStrategy(store, eld.getObjectRef()
 									.getSerializationStrategyClass());
 					Object object = objectStrategy.deserialize(eld.getObjectRef());
 
-					SessionObjectPersistenceStrategy valueStrategy = PersistenceStrategyHelper
+					ProcessObjectPersistenceStrategy valueStrategy = PersistenceStrategyHelper
 							.getStrategy(store, eld.getValueRef()
 									.getSerializationStrategyClass());
 					Object value = valueStrategy.deserialize(eld.getValueRef());

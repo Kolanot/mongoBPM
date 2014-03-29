@@ -10,14 +10,18 @@ import java.util.Set;
 import java.util.HashSet;
 
 import org.mongodb.morphia.annotations.Embedded;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Property;
 import org.mongodb.morphia.annotations.Transient;
 import org.jbpm.persistence.mongodb.correlation.MongoCorrelationKey;
 import org.jbpm.persistence.mongodb.object.MongoJavaSerializable;
+import org.jbpm.persistence.mongodb.workitem.MongoWorkItemInfo;
 import org.kie.api.runtime.process.ProcessInstance;
+import org.drools.core.process.instance.WorkItem;
 import org.kie.internal.process.CorrelationKey;
 
-@Embedded
+@Entity
 public class MongoProcessInstanceInfo implements Serializable {
 
     /**
@@ -25,6 +29,7 @@ public class MongoProcessInstanceInfo implements Serializable {
 	 */
 	private static final long serialVersionUID = 1L;
 
+	@Id
 	protected Long                     processInstanceId;
 
     private long                version;
@@ -64,6 +69,8 @@ public class MongoProcessInstanceInfo implements Serializable {
     boolean                              reconnected = false;
     @Property
     protected List<String>                 completedNodeIds = new ArrayList<String>();
+	@Embedded
+	private List<MongoWorkItemInfo> workItems = new ArrayList<MongoWorkItemInfo>();
     
     protected MongoProcessInstanceInfo() {
     }
@@ -144,7 +151,33 @@ public class MongoProcessInstanceInfo implements Serializable {
        return processInstance;
     }
   
-    @Override
+    public List<MongoWorkItemInfo> getWorkItems() {
+		return workItems;
+	}
+
+    public void addWorkItem(WorkItem workItem, long workItemId) {
+    	MongoWorkItemInfo workItemInfo = new MongoWorkItemInfo(workItem, workItemId);
+    	workItems.add(workItemInfo);
+    }
+    
+    public boolean hasWorkItem(long workItemId) {
+    	return getWorkItem(workItemId) != null;
+    }
+    
+    public MongoWorkItemInfo getWorkItem(long workItemId) {
+    	for (MongoWorkItemInfo workItemInfo:workItems) {
+    		if (workItemInfo.getId() == workItemId) return workItemInfo;
+    	}
+    	return null;
+    }
+    
+    public void removeWorkItem(long workItemId) {
+    	MongoWorkItemInfo workItemInfo = getWorkItem(workItemId);
+    	if (workItemInfo != null) {
+    		workItems.remove(workItemInfo);
+    	}
+    }
+	@Override
     public boolean equals(Object obj) {
 	   if ( obj == null ) {
 		  return false;

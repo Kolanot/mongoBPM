@@ -95,7 +95,7 @@ public class MongoSessionMap implements MongoSessionCache {
 	}
 	
 	public MongoProcessInstanceInfo getProcessInstance(long procInstId, boolean readOnly) {
-		int sessionId = MongoPersistUtil.resolveSessionIdFromPairing(procInstId);
+		int sessionId = MongoPersistUtil.resolveFirstIdFromPairing(procInstId);
 		log.info("procInstId" + procInstId);
 		log.info("sessionId" + sessionId);
 		MongoSessionInfo sessionInfo = sessionMap.get(sessionId);
@@ -158,17 +158,17 @@ public class MongoSessionMap implements MongoSessionCache {
 	}
 	
 	public boolean isProcessInstanceCached(long procInstId) {
-		int sessionId = MongoPersistUtil.resolveSessionIdFromPairing(procInstId);
+		int sessionId = MongoPersistUtil.resolveFirstIdFromPairing(procInstId);
 		return isSessionCached(sessionId);
 	}
 	
 	public boolean isWorkItemCached(long workItemId) {
-		int sessionId = MongoPersistUtil.resolveSessionIdFromPairing(workItemId);
+		int sessionId = MongoPersistUtil.resolveFirstIdFromPairing(workItemId);
 		return isSessionCached(sessionId);
 	}
 	
 	public void removeProcessInstance(long procInstId) {
-		int sessionId = MongoPersistUtil.resolveSessionIdFromPairing(procInstId);
+		int sessionId = MongoPersistUtil.resolveFirstIdFromPairing(procInstId);
 		MongoSessionInfo sessionInfo = sessionMap.get(sessionId);
 		MongoProcessData procData = sessionInfo.getProcessdata();
 		if (procData != null) {
@@ -191,12 +191,12 @@ public class MongoSessionMap implements MongoSessionCache {
 	}
 	
 	public MongoSessionInfo getSessionByWorkItemId(long workItemId) {
-		int sessionId = MongoPersistUtil.resolveSessionIdFromPairing(workItemId);
+		int sessionId = MongoPersistUtil.resolveFirstIdFromPairing(workItemId);
 		return sessionMap.get(sessionId);
 	}
 	
 	public MongoWorkItemInfo getWorkItem(long workItemId) {
-		int sessionId = MongoPersistUtil.resolveSessionIdFromPairing(workItemId);
+		int sessionId = MongoPersistUtil.resolveFirstIdFromPairing(workItemId);
 		MongoSessionInfo sessionInfo = sessionMap.get(sessionId);
 		MongoProcessData procData = sessionInfo.getProcessdata();
 		if (procData != null) {

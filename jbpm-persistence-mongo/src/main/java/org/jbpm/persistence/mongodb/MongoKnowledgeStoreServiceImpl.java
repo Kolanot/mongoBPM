@@ -20,7 +20,7 @@ import org.drools.core.command.CommandService;
 import org.drools.core.command.impl.CommandBasedStatefulKnowledgeSession;
 import org.drools.core.process.instance.WorkItemManagerFactory;
 import org.jbpm.persistence.mongodb.instance.MongoProcessInstanceManagerFactory;
-import org.jbpm.persistence.mongodb.instance.MongoSignalManagerFactory;
+import org.jbpm.persistence.mongodb.signal.MongoSignalManagerFactory;
 import org.jbpm.persistence.mongodb.workitem.MongoWorkItemManagerFactory;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.CommandExecutor;

@@ -11,7 +11,7 @@ import org.kie.internal.runtime.StatefulKnowledgeSession;
  * with regards to created (but not started) process instances 
  * and whether the process instances are available or not after creation.
  */
-public class GetProcessInstancesTest extends AbstractMongoBaseTest {
+public class GetProcessInstancesTest extends AbstractMongoBPMBaseTest {
     @Override
 	protected void populateClassPathProcessResourceList(List<String> list) {
 		list.add("processinstance/HelloWorld.rf");
@@ -45,6 +45,7 @@ public class GetProcessInstancesTest extends AbstractMongoBaseTest {
         processId[1] = ksession.createProcessInstance("org.jbpm.processinstance.helloworld", null).getId();
         ksession.dispose();
 
+        System.out.println("ProcessID:" + processId[0] +"," + processId[1]);
         assertProcessInstancesExist(processId);
     }
 
@@ -85,7 +86,8 @@ public class GetProcessInstancesTest extends AbstractMongoBaseTest {
         StatefulKnowledgeSession ksession = reloadKnowledgeSession();
 
         for (long id : processId) {
-            assertNotNull("Process instance " + id + " should not exist!", ksession.getProcessInstance(id));
+        	ProcessInstance instance = ksession.getProcessInstance(id);
+            assertNotNull("Process instance " + id + " should not exist!", instance);
         }
     }
 

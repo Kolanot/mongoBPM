@@ -1,36 +1,34 @@
 package org.jbpm.persistence.mongodb.test;
 
-import org.jbpm.persistence.mongodb.MongoSessionStore;
+import org.jbpm.persistence.mongodb.MongoProcessStore;
 import org.junit.Test;
 
 
-public class MongoStoreTest extends AbstractMongoBaseTest {
+public class MongoStoreTest extends AbstractMongoBPMBaseTest {
 	@Test
 	public void storeExists() {
-		MongoSessionStore store = getSessionStore();
+		MongoProcessStore store = getProcessStore();
 		assertNotNull(store);
 	}
 
 	@Test
-	public void getSessionId() {
-		MongoSessionStore store = getSessionStore();
-		assertNotNull(store.getNextSessionId());
-	}
-
-	@Test
 	public void getWorkItemId() {
-		MongoSessionStore store = getSessionStore();
-		assertNotNull(store.getNextWorkItemId());
+		MongoProcessStore store = getProcessStore();
+		long nextWorkItemId = store.getNextWorkItemId();
+		System.out.println("Next work item id:" + nextWorkItemId);
+		assertTrue(nextWorkItemId > 0);
 	}
 
 	@Test
 	public void getProcessInstanceId() {
-		MongoSessionStore store = getSessionStore();
-		assertNotNull(store.getNextProcessInstanceId());
+		MongoProcessStore store = getProcessStore();
+		long nextProcessInstanceId = store.getNextProcessInstanceId();
+		System.out.println("Next process instance id:" + nextProcessInstanceId);
+		assertNotNull(nextProcessInstanceId);
 	}
 
-	private MongoSessionStore getSessionStore() {
-		MongoSessionStore store = ((MongoSessionStore) getEnv().get( MongoSessionStore.envKey ));
+	private MongoProcessStore getProcessStore() {
+		MongoProcessStore store = ((MongoProcessStore) getEnv().get( MongoProcessStore.envKey ));
 		return store;
 	}
 

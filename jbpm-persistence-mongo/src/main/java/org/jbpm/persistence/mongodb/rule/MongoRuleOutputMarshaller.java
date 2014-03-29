@@ -65,7 +65,7 @@ import org.drools.core.util.ObjectHashMap;
 import org.jbpm.persistence.mongodb.MongoSessionStore;
 import org.jbpm.persistence.mongodb.object.MongoSerializable;
 import org.jbpm.persistence.mongodb.object.PersistenceStrategyHelper;
-import org.jbpm.persistence.mongodb.object.SessionObjectPersistenceStrategy;
+import org.jbpm.persistence.mongodb.object.ProcessObjectPersistenceStrategy;
 import org.jbpm.persistence.mongodb.rule.action.MongoActionMarshaller;
 import org.jbpm.persistence.mongodb.rule.memory.EmbeddedAccumulateNodeMemory;
 import org.jbpm.persistence.mongodb.rule.memory.EmbeddedNodeMemory;
@@ -564,7 +564,7 @@ public class MongoRuleOutputMarshaller {
 		Object object = handle.getObject();
 
 		if (object != null) {
-			SessionObjectPersistenceStrategy strategy = PersistenceStrategyHelper
+			ProcessObjectPersistenceStrategy strategy = PersistenceStrategyHelper
 					.getStrategy(store, object.getClass());
 			MongoSerializable objectRef = strategy.serialize(object);
 			efh.setPersistentStrategyClass(strategy.getClass().getName());
@@ -645,7 +645,7 @@ public class MongoRuleOutputMarshaller {
 
 			if (belief.getObject() != null) {
 				Object object = belief.getObject();
-				SessionObjectPersistenceStrategy strategy = PersistenceStrategyHelper
+				ProcessObjectPersistenceStrategy strategy = PersistenceStrategyHelper
 						.getStrategy(store, object.getClass());
 				MongoSerializable objectRef = strategy.serialize(object);
 				eld.setObjectRef(objectRef);
@@ -653,7 +653,7 @@ public class MongoRuleOutputMarshaller {
 
 			if (belief.getValue() != null) {
 				Object value = belief.getObject();
-				SessionObjectPersistenceStrategy strategy = PersistenceStrategyHelper
+				ProcessObjectPersistenceStrategy strategy = PersistenceStrategyHelper
 						.getStrategy(store, value.getClass());
 				MongoSerializable valueRef = strategy.serialize(value);
 				eld.setValueRef(valueRef);

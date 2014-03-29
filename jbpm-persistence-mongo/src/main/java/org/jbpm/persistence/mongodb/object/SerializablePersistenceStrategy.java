@@ -6,7 +6,7 @@ import org.mongodb.morphia.annotations.Polymorphic;
 
 @Polymorphic
 public class SerializablePersistenceStrategy implements
-		SessionObjectPersistenceStrategy, Serializable {
+		ProcessObjectPersistenceStrategy, Serializable {
 
 	/**
 	 * 

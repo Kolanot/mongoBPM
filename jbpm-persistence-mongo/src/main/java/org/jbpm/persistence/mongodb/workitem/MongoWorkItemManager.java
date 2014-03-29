@@ -10,10 +10,8 @@ import org.drools.core.common.InternalKnowledgeRuntime;
 import org.drools.core.process.instance.WorkItem;
 import org.drools.core.process.instance.WorkItemManager;
 import org.jbpm.persistence.mongodb.MongoPersistUtil;
-import org.jbpm.persistence.mongodb.MongoSessionStore;
-import org.jbpm.persistence.mongodb.instance.MongoProcessData;
-import org.jbpm.persistence.mongodb.session.MongoSessionInfo;
-import org.jbpm.persistence.mongodb.session.MongoSessionManager;
+import org.jbpm.persistence.mongodb.MongoProcessStore;
+import org.jbpm.persistence.mongodb.instance.MongoProcessInstanceInfo;
 import org.kie.api.runtime.process.ProcessInstance;
 import org.kie.api.runtime.process.WorkItemHandler;
 import org.slf4j.Logger;
@@ -24,24 +22,23 @@ public class MongoWorkItemManager implements WorkItemManager {
 
     private InternalKnowledgeRuntime kruntime;
     private Map<String, WorkItemHandler> workItemHandlers = new HashMap<String, WorkItemHandler>();
-    private MongoSessionManager sessionManager;
+    private MongoProcessStore procStore;
     
     public MongoWorkItemManager(InternalKnowledgeRuntime kruntime) {
         this.kruntime = kruntime;
-        sessionManager = new MongoSessionManager(kruntime);
+        procStore = (MongoProcessStore)kruntime.getEnvironment().get(MongoProcessStore.envKey);
     }
     
     public void internalExecuteWorkItem(WorkItem workItem) {
-    	MongoSessionInfo sessionInfo = getMongoSessionInfoByProcessInstanceId(workItem.getProcessInstanceId());
-    	MongoProcessData processData = sessionInfo.getProcessdata(); 
+    	long procInstId = workItem.getProcessInstanceId();
+    	MongoProcessInstanceInfo procInstInfo = procStore.findProcessInstanceInfo(procInstId);
     	if (workItem.getId() == 0) {
-    		long workItemId = getNextWorkItemId(sessionInfo.getId());
+    		long workItemId = getNextWorkItemId(procInstId);
     		((WorkItemImpl)workItem).setId(workItemId);
-			processData.addWorkItem(workItem, workItemId);
-    	} else if (!processData.hasWorkItem(workItem.getId())) {
-    		processData.addWorkItem(workItem);
+			procInstInfo.addWorkItem(workItem, workItemId);
+    	} else if (!procInstInfo.hasWorkItem(workItem.getId())) {
+    		procInstInfo.addWorkItem(workItem, workItem.getId());
     	}
-    	sessionInfo.setModifiedSinceLastSave(true);
         WorkItemHandler handler = (WorkItemHandler) this.workItemHandlers.get(workItem.getName());
         if (handler != null) {
             handler.executeWorkItem(workItem, this);
@@ -50,27 +47,15 @@ public class MongoWorkItemManager implements WorkItemManager {
         }
     }
 
-	private MongoSessionInfo getMongoSessionInfoByProcessInstanceId(long procInstId) { 
-		int sessionId = MongoPersistUtil.resolveSessionIdFromPairing(procInstId);
-		MongoSessionInfo sessionInfo = null;
-		try {
-			sessionInfo = sessionManager.getMongoSessionInfo(sessionId);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return sessionInfo;
-	}
-
-	private long getNextWorkItemId(int sessionId) {
-		MongoSessionStore store = (MongoSessionStore)this.kruntime.getEnvironment().get(MongoSessionStore.envKey);
+	private long getNextWorkItemId(long procInstId) {
+		MongoProcessStore store = (MongoProcessStore)this.kruntime.getEnvironment().get(MongoProcessStore.envKey);
 		long workItemId = store.getNextWorkItemId();
-		return MongoPersistUtil.pairingSessionId(sessionId, workItemId);
+		return MongoPersistUtil.pairingTwoIDs(procInstId, workItemId);
 	}
 	
-	private MongoSessionInfo getMongoSessionInfoByWorkItemId(long workItemId) {
-		MongoSessionInfo sessionInfo = sessionManager.getSessionByWorkItemId(workItemId);
-		return sessionInfo;
+	private MongoProcessInstanceInfo getMongoProcInstInfoByWorkItemId(long workItemId) {
+		long procInstId = MongoPersistUtil.resolveFirstIdFromPairing(workItemId);
+		return procStore.findProcessInstanceInfo(procInstId);
 	}
 
     private void throwWorkItemNotFoundException(WorkItem workItem) {
@@ -83,9 +68,9 @@ public class MongoWorkItemManager implements WorkItemManager {
     }
     
     public void retryWorkItem(long workItemId) {
-        MongoSessionInfo sessionInfo = getMongoSessionInfoByWorkItemId(workItemId);
-        if (sessionInfo != null) {
-  			MongoWorkItemInfo workItemInfo = getWorkItem(sessionInfo, workItemId);
+        MongoProcessInstanceInfo procInstInfo = getMongoProcInstInfoByWorkItemId(workItemId);
+        if (procInstInfo != null) {
+  			MongoWorkItemInfo workItemInfo = procInstInfo.getWorkItem(workItemId);
   			if (workItemInfo == null) {
   				logger.debug("cannot found workItem by id " + workItemId);
   				return;
@@ -102,13 +87,13 @@ public class MongoWorkItemManager implements WorkItemManager {
         }
     }
 
-    public void internalAbortWorkItem(long id) {
-        MongoSessionInfo sessionInfo = getMongoSessionInfoByWorkItemId(id);
+    public void internalAbortWorkItem(long workItemId) {
+        MongoProcessInstanceInfo procInstInfo = getMongoProcInstInfoByWorkItemId(workItemId);
         // work item may have been aborted
-        if (sessionInfo != null) {
-  			MongoWorkItemInfo workItemInfo = getWorkItem(sessionInfo, id);
+        if (procInstInfo != null) {
+  			MongoWorkItemInfo workItemInfo = procInstInfo.getWorkItem(workItemId);
   			if (workItemInfo == null) {
-  				logger.info("cannot found workItem by id " + id);
+  				logger.info("cannot found workItem by id " + workItemId);
   				return;
   			}
   			WorkItem workItem = workItemInfo.getWorkItem();
@@ -116,8 +101,8 @@ public class MongoWorkItemManager implements WorkItemManager {
 			if (handler != null) {
 				handler.abortWorkItem(workItem, this);
 			}
-			sessionInfo.getProcessdata().removeWorkItem(id);
-			sessionInfo.setModifiedSinceLastSave(true);
+			procInstInfo.removeWorkItem(workItemId);
+			procStore.saveOrUpdate(procInstInfo);
         }
     }
 
@@ -125,10 +110,10 @@ public class MongoWorkItemManager implements WorkItemManager {
     }
 
     public void completeWorkItem(long id, Map<String, Object> results) {
-        MongoSessionInfo sessionInfo = getMongoSessionInfoByWorkItemId(id);
+        MongoProcessInstanceInfo procInstInfo = getMongoProcInstInfoByWorkItemId(id);
         // work item may have been aborted
-        if (sessionInfo != null) {
-        	MongoWorkItemInfo itemInfo = getWorkItem(sessionInfo, id);
+        if (procInstInfo != null) {
+        	MongoWorkItemInfo itemInfo = procInstInfo.getWorkItem(id);
   			if (itemInfo == null) {
   				logger.info("cannot found workItem by id " + id);
   				return;
@@ -143,16 +128,15 @@ public class MongoWorkItemManager implements WorkItemManager {
             if (processInstance != null) {
                 processInstance.signalEvent("workItemCompleted", workItem);
             }
-            sessionInfo.setModifiedSinceLastSave(true);
-            logger.info("work item completed, session:" + sessionInfo.getId() + ",work item id: " + workItem.getId());
+            logger.info("work item completed, process instance:" + procInstInfo.getProcessInstanceId() + ",work item id: " + workItem.getId());
         }
     }
 
     public void abortWorkItem(long id) {
-        MongoSessionInfo sessionInfo = getMongoSessionInfoByWorkItemId(id);
+        MongoProcessInstanceInfo procInstInfo = getMongoProcInstInfoByWorkItemId(id);
         // work item may have been aborted
-        if (sessionInfo != null) {
-        	MongoWorkItemInfo itemInfo = getWorkItem(sessionInfo, id);
+        if (procInstInfo != null) {
+        	MongoWorkItemInfo itemInfo = procInstInfo.getWorkItem(id);
   			if (itemInfo == null) {
   				logger.info("cannot found workItem by id " + id);
   				return;
@@ -161,29 +145,17 @@ public class MongoWorkItemManager implements WorkItemManager {
             workItem.setState(WorkItem.ABORTED);
             // process instance may have finished already
             ProcessInstance processInstance = kruntime.getProcessInstance(workItem.getProcessInstanceId());
+            itemInfo.setWorkItem(workItem);
             if (processInstance != null) {
                 processInstance.signalEvent("workItemAborted", workItem);
             }
-            itemInfo.setWorkItem(workItem);
-            sessionInfo.setModifiedSinceLastSave(true);
         }
     }
 
-    public WorkItem getWorkItem(long id) {
-        MongoSessionInfo sessionInfo = getMongoSessionInfoByWorkItemId(id);
-        MongoWorkItemInfo itemInfo = getWorkItem(sessionInfo, id);
+    public WorkItem getWorkItem(long workItemId) {
+        MongoProcessInstanceInfo procInstInfo = getMongoProcInstInfoByWorkItemId(workItemId);
+        MongoWorkItemInfo itemInfo = procInstInfo.getWorkItem(workItemId);
        return itemInfo == null? null:itemInfo.getWorkItem();
-    }
-
-    private MongoWorkItemInfo getWorkItem(MongoSessionInfo sessionInfo, long id) {
-        // work item may have been aborted
-        if (sessionInfo != null) {
-            for (MongoWorkItemInfo itemInfo : sessionInfo.getProcessdata().getWorkItems())  {
-            	if (itemInfo.getId() == id)
-            		return itemInfo;
-            }
-        }	
-    	return null;
     }
 
     public void registerWorkItemHandler(String workItemName, WorkItemHandler handler) {
