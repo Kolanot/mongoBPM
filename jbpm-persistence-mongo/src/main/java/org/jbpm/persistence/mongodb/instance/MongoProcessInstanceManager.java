@@ -121,10 +121,13 @@ public class MongoProcessInstanceManager implements ProcessInstanceManager {
 	}
 
     public Collection<ProcessInstance> getProcessInstances() {
+    	processInstanceInfoCaches.clear();
+    	List<MongoProcessInstanceInfo> procInstInfos = store.findAllProcessInstances();
     	List<ProcessInstance> processInstances = new ArrayList<ProcessInstance>();
-    	for (MongoProcessInstanceInfo processInstInfo:processInstanceInfoCaches.values()) {
-    		ProcessInstance instance = toProcessInstance(processInstInfo);
+    	for (MongoProcessInstanceInfo procInstInfo:procInstInfos) {
+    		ProcessInstance instance = toProcessInstance(procInstInfo);
     		processInstances.add(instance);
+    		processInstanceInfoCaches.put(procInstInfo.getProcessInstanceId(), procInstInfo);
     	}
         return Collections.unmodifiableCollection(processInstances);
     }

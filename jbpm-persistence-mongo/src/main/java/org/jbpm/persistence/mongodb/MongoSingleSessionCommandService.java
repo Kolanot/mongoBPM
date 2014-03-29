@@ -56,7 +56,7 @@ public class MongoSingleSessionCommandService
     private CommandService             commandService;
     private KieSessionConfiguration    conf;
     private KieBase                    kbase;
-
+    
     public void checkEnvironment(Environment env) {
         if ( env.get(MongoProcessStore.envKey ) == null) {
             throw new IllegalArgumentException( "Environment must have an MongoProcessStore instance" );
@@ -145,6 +145,7 @@ public class MongoSingleSessionCommandService
             // nothing to initialize
         }
         // if this.ksession is null, it'll create a new one, else it'll use the existing one
+        this.ksession = kbase.newKieSession( this.conf, this.env );
 
         // The CommandService for the TimerJobFactoryManager must be set before any timer jobs are scheduled. 
         // Otherwise, if overdue jobs are scheduled (and then run before the .commandService field can be set), 
@@ -233,9 +234,11 @@ public class MongoSingleSessionCommandService
                     //  StatefulSessionKnowledgeImpl.execute(Context,Command);
                     result = ksession.execute(command);
                 } else { 
+                	System.out.println("Command" + command.getClass());
                     result = executeNext( (GenericCommand<T>) command );
                 }
-                
+                MongoProcessStore store = (MongoProcessStore)env.get(MongoProcessStore.envKey);
+                store.commit();
                 InternalProcessRuntime internalProcessRuntime = (InternalProcessRuntime) ((InternalKnowledgeRuntime) ksession).getProcessRuntime();
                 internalProcessRuntime.clearProcessInstances();
                 ((MongoWorkItemManager) ksession.getWorkItemManager()).clearWorkItems();

@@ -1,12 +1,16 @@
 package org.jbpm.persistence.mongodb;
 
+import java.io.NotSerializableException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.jboss.logging.Logger;
 import org.jbpm.persistence.mongodb.correlation.MongoCorrelationKey;
 import org.jbpm.persistence.mongodb.correlation.MongoCorrelationProperty;
 import org.jbpm.persistence.mongodb.instance.MongoProcessInstanceId;
 import org.jbpm.persistence.mongodb.instance.MongoProcessInstanceInfo;
+import org.jbpm.persistence.mongodb.instance.MongoProcessInstanceMarshaller;
 import org.jbpm.persistence.mongodb.object.ProcessObjectPersistenceStrategy;
 import org.jbpm.persistence.mongodb.workitem.MongoWorkItemId;
 import org.kie.internal.process.CorrelationKey;
@@ -26,6 +30,9 @@ public class MongoProcessStore {
 	Datastore ds; 
 	Morphia morphia;
 	MongoClient mongo;
+	enum StoreAction {SAVE, DELETE};
+	
+	Map<StoreAction, MongoProcessInstanceInfo> tobeCommitted = new HashMap<StoreAction, MongoProcessInstanceInfo>();
 	
 	public MongoProcessStore() {
 		try {
@@ -51,10 +58,26 @@ public class MongoProcessStore {
 		if (instanceInfo.getProcessInstanceId() == 0) {
 			instanceInfo.setProcessInstanceId(getNextProcessInstanceId());
 		}
-		ds.save(instanceInfo);
-		instanceInfo.setModifiedSinceLastSave(false);
+		tobeCommitted.put(StoreAction.SAVE, instanceInfo);
 	}
 
+	public void commit() {
+		for (Map.Entry<StoreAction, MongoProcessInstanceInfo> entry: tobeCommitted.entrySet()) {
+			MongoProcessInstanceInfo procInstInfo = entry.getValue();
+			if (entry.getKey() == StoreAction.SAVE) {
+				try {
+					MongoProcessInstanceMarshaller.serialize(procInstInfo);
+				} catch (NotSerializableException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				ds.save(procInstInfo);
+			} else if (entry.getKey() == StoreAction.DELETE) 
+				ds.delete(entry.getValue());
+		}
+		tobeCommitted.clear();
+	}
+	
 	public long getNextProcessInstanceId() {
 		Query<MongoProcessInstanceId> query = ds.find(MongoProcessInstanceId.class);
 		UpdateOperations<MongoProcessInstanceId> ops = ds.createUpdateOperations(MongoProcessInstanceId.class).inc("seq");
@@ -105,7 +128,9 @@ public class MongoProcessStore {
 	}
 	
 	public List<MongoProcessInstanceInfo> findProcessInstancesByProcessEvent(String eventType) {
-		return ds.find(MongoProcessInstanceInfo.class).filter("eventTypes elem", eventType).asList();
+		//Map<String, String> eventTypeObj = new HashMap<String, String>();
+		//eventTypeObj.put("eventType", eventType);
+		return ds.find(MongoProcessInstanceInfo.class).filter("eventTypes =", eventType).asList();
 	}
 	
 	public void removeProcessInstanceInfo(Long id) {
@@ -115,7 +140,7 @@ public class MongoProcessStore {
 	
 	public void removeProcessInstanceInfo(MongoProcessInstanceInfo instance) {
 		if (instance != null) {
-			ds.delete(instance);
+			tobeCommitted.put(StoreAction.DELETE, instance);
 		}
 	}
 
