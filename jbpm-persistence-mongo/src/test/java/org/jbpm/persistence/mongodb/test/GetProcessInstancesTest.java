@@ -35,16 +35,18 @@ public class GetProcessInstancesTest extends AbstractMongoBPMBaseTest {
         ksession.dispose();
         ksession = createKnowledgeSession();
         ProcessInstance instance = ksession.getProcessInstance(processId);
-        assertNull("Process instance " + processId + " should not exist in this new session!", instance);
+        assertNotNull("Process instance " + processId + " should exist in this new session!", instance);
     }
 
 	@Test
     public void create2ProcessInstances() throws Exception {
         long[] processId = new long[2];
-
+        ProcessInstance[] instance = new ProcessInstance[2];
         StatefulKnowledgeSession ksession = reloadKnowledgeSession();
-        processId[0] = ksession.createProcessInstance("org.jbpm.processinstance.helloworld", null).getId();
-        processId[1] = ksession.createProcessInstance("org.jbpm.processinstance.helloworld", null).getId();
+        instance[0] = ksession.createProcessInstance("org.jbpm.processinstance.helloworld", null);
+        processId[0] = instance[0].getId();
+        instance[1] = ksession.createProcessInstance("org.jbpm.processinstance.helloworld", null);
+        processId[1] = instance[1].getId();
         ksession.dispose();
 
         System.out.println("ProcessID:" + processId[0] +"," + processId[1]);

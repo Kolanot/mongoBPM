@@ -36,7 +36,7 @@ public class MongoProcessInstanceManager implements ProcessInstanceManager {
 
     private InternalKnowledgeRuntime kruntime;
     
-    private Map<Long, MongoProcessInstanceInfo> processInstanceInfoCaches = new HashMap<Long, MongoProcessInstanceInfo>(); 
+    private Map<Long, MongoProcessInstanceInfo> processInstanceInfoCache = new HashMap<Long, MongoProcessInstanceInfo>(); 
     
     public void setKnowledgeRuntime(InternalKnowledgeRuntime kruntime) {
         store = (MongoProcessStore)kruntime.getEnvironment().get(MongoProcessStore.envKey);
@@ -60,7 +60,7 @@ public class MongoProcessInstanceManager implements ProcessInstanceManager {
 			e.printStackTrace();
 		}
         store.saveNew(processInstanceInfo);
-        processInstanceInfoCaches.put(processInstanceInfo.getProcessInstanceId(), processInstanceInfo);
+        processInstanceInfoCache.put(processInstanceInfo.getProcessInstanceId(), processInstanceInfo);
     }
     
     public void internalAddProcessInstance(ProcessInstance processInstance) {
@@ -121,28 +121,29 @@ public class MongoProcessInstanceManager implements ProcessInstanceManager {
 	}
 
     public Collection<ProcessInstance> getProcessInstances() {
-    	processInstanceInfoCaches.clear();
+    	processInstanceInfoCache.clear();
     	List<MongoProcessInstanceInfo> procInstInfos = store.findAllProcessInstances();
     	List<ProcessInstance> processInstances = new ArrayList<ProcessInstance>();
     	for (MongoProcessInstanceInfo procInstInfo:procInstInfos) {
     		ProcessInstance instance = toProcessInstance(procInstInfo);
     		processInstances.add(instance);
-    		processInstanceInfoCaches.put(procInstInfo.getProcessInstanceId(), procInstInfo);
+    		processInstanceInfoCache.put(procInstInfo.getProcessInstanceId(), procInstInfo);
     	}
         return Collections.unmodifiableCollection(processInstances);
     }
 
     public void internalRemoveProcessInstance(ProcessInstance processInstance) {
-    	processInstanceInfoCaches.remove(processInstance.getId());
+    	processInstanceInfoCache.remove(processInstance.getId());
     }
     
     public void clearProcessInstances() {
     	logger.debug("clearProcessInstances called");
-        for (ProcessInstance processInstance: new ArrayList<ProcessInstance>(getProcessInstances())) {
+    	for (MongoProcessInstanceInfo procInstInfo:processInstanceInfoCache.values()) {
+    		ProcessInstance processInstance = procInstInfo.getProcessInstance();
         	if (processInstance == null) continue;
     		((ProcessInstanceImpl) processInstance).disconnect();
         }
-        processInstanceInfoCaches.clear();
+        processInstanceInfoCache.clear();
     }
 
     public void clearProcessInstancesState() {
@@ -179,7 +180,7 @@ public class MongoProcessInstanceManager implements ProcessInstanceManager {
 	public ProcessInstance findProcessInstanceByWorkItemId(long workItemId, boolean readOnly) {
 		MongoProcessInstanceInfo procInst = store.findProcessInstanceByWorkItemId(workItemId);
 		if (procInst != null) { 
-    		processInstanceInfoCaches.put(procInst.getProcessInstanceId(), procInst);
+    		processInstanceInfoCache.put(procInst.getProcessInstanceId(), procInst);
 			return toProcessInstance(procInst);
 		} else 
 			return null;
@@ -189,7 +190,7 @@ public class MongoProcessInstanceManager implements ProcessInstanceManager {
 		List<MongoProcessInstanceInfo> mongoInstances = store.findProcessInstancesByProcessEvent(eventType);
 		List<ProcessInstance> instances = new ArrayList<ProcessInstance>();
 		for (MongoProcessInstanceInfo mongoInstance:mongoInstances) {
-    		processInstanceInfoCaches.put(mongoInstance.getProcessInstanceId(),  mongoInstance);
+    		processInstanceInfoCache.put(mongoInstance.getProcessInstanceId(),  mongoInstance);
 			instances.add(toProcessInstance(mongoInstance));
 		}
 		return instances;
@@ -198,7 +199,7 @@ public class MongoProcessInstanceManager implements ProcessInstanceManager {
     public ProcessInstance getProcessInstance(CorrelationKey correlationKey) {
 		MongoProcessInstanceInfo procInst = store.findProcessInstanceInfoByProcessCorrelationKey(correlationKey);
 		if (procInst != null) { 
-    		processInstanceInfoCaches.put(procInst.getProcessInstanceId(),  procInst);
+    		processInstanceInfoCache.put(procInst.getProcessInstanceId(),  procInst);
     		return toProcessInstance(procInst);
 		} else 
 			return null;
@@ -213,12 +214,12 @@ public class MongoProcessInstanceManager implements ProcessInstanceManager {
     }
     
     public MongoProcessInstanceInfo findProcessInstanceInfo(long procInstId) {
-    	MongoProcessInstanceInfo procInstInfo = processInstanceInfoCaches.get(procInstId);
+    	MongoProcessInstanceInfo procInstInfo = processInstanceInfoCache.get(procInstId);
     	if (procInstInfo == null) {
     		procInstInfo = store.findProcessInstanceInfo(procInstId);
     		if (procInstInfo == null) return null;
     		toProcessInstance(procInstInfo);
-    		processInstanceInfoCaches.put(procInstId,  procInstInfo);
+    		processInstanceInfoCache.put(procInstId,  procInstInfo);
     	}
 		return procInstInfo;
     }

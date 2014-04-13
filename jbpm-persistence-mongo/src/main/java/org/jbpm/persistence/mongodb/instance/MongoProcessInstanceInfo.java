@@ -80,7 +80,7 @@ public class MongoProcessInstanceInfo implements Serializable {
     }
     
  	public long getProcessInstanceId() { 
- 		return processInstanceId;
+ 		return processInstanceId== null?0:processInstanceId.longValue();
     }
     
     public void setProcessInstanceId(long processInstanceId) { 
@@ -315,6 +315,7 @@ public class MongoProcessInstanceInfo implements Serializable {
 		private static final long serialVersionUID = 1L;
 		long id;
     	long nodeId;
+    	int level;
     	String nodeClassName;
     	List<Long> timerIds = new ArrayList<Long>();
     	long workItemId;
@@ -337,6 +338,12 @@ public class MongoProcessInstanceInfo implements Serializable {
 		}
 		public void setNodeId(long nodeId) {
 			this.nodeId = nodeId;
+		}
+		public int getLevel() {
+			return level;
+		}
+		public void setLevel(int level) {
+			this.level = level;
 		}
 		public String getNodeClassName() {
 			return nodeClassName;
@@ -391,6 +398,7 @@ public class MongoProcessInstanceInfo implements Serializable {
 					+ ((nodeClassName == null) ? 0 : nodeClassName.hashCode());
 			result = prime * result + (int) (id ^ (id >>> 32));
 			result = prime * result + (int) (nodeId ^ (nodeId >>> 32));
+			result = prime * result + (int) (level ^ (level >>> 32));
 			return result;
 		}
 		
@@ -411,6 +419,8 @@ public class MongoProcessInstanceInfo implements Serializable {
 			if (id != other.id)
 				return false;
 			if (nodeId != other.nodeId)
+				return false;
+			if (level != other.level) 
 				return false;
 			return true;
 		}

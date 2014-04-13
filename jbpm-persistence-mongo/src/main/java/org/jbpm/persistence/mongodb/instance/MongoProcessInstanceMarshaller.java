@@ -124,6 +124,7 @@ public class MongoProcessInstanceMarshaller {
     	EmbeddedNodeInstance eni = new EmbeddedNodeInstance();
         eni.setId(nodeInstance.getId());
         eni.setNodeId(nodeInstance.getNodeId());
+        eni.setLevel(((org.jbpm.workflow.instance.NodeInstance)nodeInstance).getLevel());
         eni.setNodeClassName(nodeInstance.getClass().getName());
         serializeNodeInstanceContent(eni, nodeInstance);
         return eni;
@@ -253,12 +254,14 @@ public class MongoProcessInstanceMarshaller {
             WorkflowProcessInstanceImpl processInstance) throws ClassNotFoundException {
         long id = ein.getId();
         long nodeId = ein.getNodeId();
+        int level = ein.getLevel();
         String className = ein.getNodeClassName();
         @SuppressWarnings("unchecked")
 		Class<? extends NodeInstance> varClass = (Class<? extends NodeInstance>) Class.forName(className);
         NodeInstanceImpl nodeInstance = readNodeInstanceContent(varClass, ein, processInstance);
 
         nodeInstance.setNodeId(nodeId);
+        nodeInstance.setLevel(level);
         nodeInstance.setNodeInstanceContainer(nodeInstanceContainer);
         nodeInstance.setProcessInstance((org.jbpm.workflow.instance.WorkflowProcessInstance) processInstance);
         nodeInstance.setId(id);

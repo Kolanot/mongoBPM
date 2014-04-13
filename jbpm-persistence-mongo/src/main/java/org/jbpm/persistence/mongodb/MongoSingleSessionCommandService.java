@@ -79,7 +79,7 @@ public class MongoSingleSessionCommandService
     public MongoSingleSessionCommandService(KieBase kbase,
                                        KieSessionConfiguration conf,
                                        Environment env) throws ClassNotFoundException, IOException {
-    	logger.info("enter MongoSingleSessionCommandService");
+    	logger.debug("enter MongoSingleSessionCommandService");
         if ( conf == null ) {
             conf = new SessionConfiguration();
         }
@@ -234,7 +234,6 @@ public class MongoSingleSessionCommandService
                     //  StatefulSessionKnowledgeImpl.execute(Context,Command);
                     result = ksession.execute(command);
                 } else { 
-                	System.out.println("Command" + command.getClass());
                     result = executeNext( (GenericCommand<T>) command );
                 }
                 MongoProcessStore store = (MongoProcessStore)env.get(MongoProcessStore.envKey);

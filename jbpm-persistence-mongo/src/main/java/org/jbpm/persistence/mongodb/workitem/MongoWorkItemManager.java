@@ -32,6 +32,17 @@ public class MongoWorkItemManager implements WorkItemManager {
     public void internalExecuteWorkItem(WorkItem workItem) {
     	long procInstId = workItem.getProcessInstanceId();
     	MongoProcessInstanceInfo procInstInfo = procStore.findProcessInstanceInfo(procInstId);
+    	if (procInstInfo == null) {
+    		// process instance has not been serialized
+    		ProcessInstance inst = kruntime.getProcessInstance(procInstId);
+    		if (inst != null) {
+    			procInstInfo = new MongoProcessInstanceInfo(inst);
+    		} else {
+                throwWorkItemNotFoundException( workItem );
+                System.out.println("cannot find process instance by id" + procInstId);
+                return;
+    		}
+    	}
     	if (workItem.getId() == 0) {
     		long workItemId = getNextWorkItemId(procInstId);
     		((WorkItemImpl)workItem).setId(workItemId);
@@ -45,6 +56,7 @@ public class MongoWorkItemManager implements WorkItemManager {
         } else {
             throwWorkItemNotFoundException( workItem );
         }
+		procStore.saveOrUpdate(procInstInfo);
     }
 
 	private long getNextWorkItemId(long procInstId) {

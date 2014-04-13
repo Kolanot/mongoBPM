@@ -3,10 +3,11 @@ package org.jbpm.persistence.mongodb.test;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.kie.api.runtime.process.ProcessInstance;
 
 import org.junit.Test;
 
-public class ParameterMappingTest extends AbstractMongoBaseTest {
+public class ParameterMappingTest extends AbstractMongoBPMBaseTest {
     
     private static final String PROCESS_ID = "org.jbpm.processinstance.subprocess";
     private static final String SUBPROCESS_ID = "org.jbpm.processinstance.helloworld";
@@ -39,7 +40,8 @@ public class ParameterMappingTest extends AbstractMongoBaseTest {
         mapping.put("type", "event");
         mapping.put("var", 1);
 
-        getKSession().startProcess(PROCESS_ID, mapping).getId();
+        ProcessInstance inst = getKSession().startProcess(PROCESS_ID, mapping);
+        assertTrue(inst.getState() == ProcessInstance.STATE_ACTIVE);
         getKSession().signalEvent("pass", "2");
 
         ProcessListener listener = getListener();

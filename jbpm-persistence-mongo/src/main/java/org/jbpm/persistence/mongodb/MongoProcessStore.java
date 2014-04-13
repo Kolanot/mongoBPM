@@ -13,6 +13,7 @@ import org.jbpm.persistence.mongodb.instance.MongoProcessInstanceInfo;
 import org.jbpm.persistence.mongodb.instance.MongoProcessInstanceMarshaller;
 import org.jbpm.persistence.mongodb.object.ProcessObjectPersistenceStrategy;
 import org.jbpm.persistence.mongodb.workitem.MongoWorkItemId;
+import org.jbpm.process.instance.ProcessInstance;
 import org.kie.internal.process.CorrelationKey;
 import org.kie.internal.process.CorrelationProperty;
 import org.mongodb.morphia.Datastore;
@@ -20,6 +21,7 @@ import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
+import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 
 public class MongoProcessStore {
@@ -30,9 +32,9 @@ public class MongoProcessStore {
 	Datastore ds; 
 	Morphia morphia;
 	MongoClient mongo;
-	enum StoreAction {SAVE, DELETE};
 	
-	Map<StoreAction, MongoProcessInstanceInfo> tobeCommitted = new HashMap<StoreAction, MongoProcessInstanceInfo>();
+	Map<Long, MongoProcessInstanceInfo> tobeSaved = new HashMap<Long, MongoProcessInstanceInfo>();
+	Map<Long, MongoProcessInstanceInfo> tobeDeleted = new HashMap<Long, MongoProcessInstanceInfo>();
 	
 	public MongoProcessStore() {
 		try {
@@ -58,24 +60,33 @@ public class MongoProcessStore {
 		if (instanceInfo.getProcessInstanceId() == 0) {
 			instanceInfo.setProcessInstanceId(getNextProcessInstanceId());
 		}
-		tobeCommitted.put(StoreAction.SAVE, instanceInfo);
+		tobeSaved.put(instanceInfo.getProcessInstanceId(), instanceInfo);
 	}
 
 	public void commit() {
-		for (Map.Entry<StoreAction, MongoProcessInstanceInfo> entry: tobeCommitted.entrySet()) {
-			MongoProcessInstanceInfo procInstInfo = entry.getValue();
-			if (entry.getKey() == StoreAction.SAVE) {
-				try {
-					MongoProcessInstanceMarshaller.serialize(procInstInfo);
-				} catch (NotSerializableException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+		for (MongoProcessInstanceInfo procInstInfo: tobeSaved.values()) {
+			try {
+				MongoProcessInstanceMarshaller.serialize(procInstInfo);
+			} catch (NotSerializableException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			if (procInstInfo.getState() == ProcessInstance.STATE_COMPLETED ||
+					procInstInfo.getState() == ProcessInstance.STATE_ABORTED) {
+				// archive to collection ArchivedProcessInstanceInfo
+				DBObject archivedProcInstInfo = morphia.toDBObject(procInstInfo);
+				ds.getDB().getCollection("ArchivedProcessInstanceInfo").save(archivedProcInstInfo);				
+				ds.delete(procInstInfo);
+			} else {
 				ds.save(procInstInfo);
-			} else if (entry.getKey() == StoreAction.DELETE) 
-				ds.delete(entry.getValue());
+			}
 		}
-		tobeCommitted.clear();
+		tobeSaved.clear();
+		for (MongoProcessInstanceInfo procInstInfo: tobeDeleted.values()) {
+			ds.delete(procInstInfo);
+		}
+		tobeDeleted.clear();
 	}
 	
 	public long getNextProcessInstanceId() {
@@ -97,6 +108,8 @@ public class MongoProcessStore {
 	}
 
 	public MongoProcessInstanceInfo findProcessInstanceInfo(long id) {
+		MongoProcessInstanceInfo procInstInfo = tobeSaved.get(id);
+		if (procInstInfo != null) return procInstInfo;
 		return ds.get(MongoProcessInstanceInfo.class, id);
 	}
 
@@ -140,7 +153,7 @@ public class MongoProcessStore {
 	
 	public void removeProcessInstanceInfo(MongoProcessInstanceInfo instance) {
 		if (instance != null) {
-			tobeCommitted.put(StoreAction.DELETE, instance);
+			tobeDeleted.put(instance.getProcessInstanceId(), instance);
 		}
 	}
 

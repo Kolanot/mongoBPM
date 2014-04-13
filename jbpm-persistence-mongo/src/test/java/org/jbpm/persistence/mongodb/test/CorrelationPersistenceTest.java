@@ -14,7 +14,7 @@ import org.kie.internal.runtime.StatefulKnowledgeSession;
 import org.kie.internal.utils.ServiceRegistryImpl;
 import org.kie.api.runtime.process.ProcessInstance;
 
-public class CorrelationPersistenceTest extends AbstractMongoBaseTest {
+public class CorrelationPersistenceTest extends AbstractMongoBPMBaseTest {
     
     private static final String HelloWorld = "org.jbpm.processinstance.helloworld";
     private static final String SubProcess = "org.jbpm.processinstance.subprocess";
@@ -76,7 +76,7 @@ public class CorrelationPersistenceTest extends AbstractMongoBaseTest {
         
         ProcessInstance processInstance2 = ((CorrelationAwareProcessRuntime)ksession).getProcessInstance(key);
         
-        assertEquals(processInstance1, processInstance2);
+        assertEquals(processInstance1.getId(), processInstance2.getId());
     }
     
     @Test
