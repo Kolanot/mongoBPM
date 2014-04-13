@@ -42,7 +42,7 @@ import org.kie.internal.runtime.StatefulKnowledgeSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VariablePersistenceStrategyTest extends AbstractMongoBaseTest {
+public class VariablePersistenceStrategyTest extends AbstractMongoBPMBaseTest {
 
     private static final Logger logger = LoggerFactory.getLogger( VariablePersistenceStrategyTest.class );
     

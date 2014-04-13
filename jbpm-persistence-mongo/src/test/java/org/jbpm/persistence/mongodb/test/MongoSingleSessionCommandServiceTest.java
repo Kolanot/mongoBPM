@@ -57,7 +57,7 @@ import org.kie.internal.definition.KnowledgePackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MongoSingleSessionCommandServiceTest extends AbstractMongoBaseTest {
+public class MongoSingleSessionCommandServiceTest extends AbstractMongoBPMBaseTest {
     
     private static final Logger logger = LoggerFactory.getLogger(MongoSingleSessionCommandServiceTest.class);
 

@@ -5,12 +5,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 import java.util.List;
 
-import org.jbpm.persistence.mongodb.MongoSessionStore;
-
+import org.jbpm.persistence.mongodb.MongoProcessStore;
 import org.mongodb.morphia.annotations.Entity;
 
 public class PersistenceStrategyHelper {
-	public static ProcessObjectPersistenceStrategy getStrategy(MongoSessionStore store, Class<?> clazz) 
+	public static ProcessObjectPersistenceStrategy getStrategy(MongoProcessStore store, Class<?> clazz) 
 				throws ClassNotFoundException {
 		if (clazz.isAnnotationPresent(Entity.class)) 
 			return new MongoEntityPersistenceStrategy(store);
@@ -22,7 +21,7 @@ public class PersistenceStrategyHelper {
 		return new SerializablePersistenceStrategy();
 	}
 	
-	public static ProcessObjectPersistenceStrategy getStrategy(MongoSessionStore store, 
+	public static ProcessObjectPersistenceStrategy getStrategy(MongoProcessStore store, 
 			String strategyClassName) 
 			throws ClassNotFoundException, InstantiationException, IllegalAccessException, 
 			IllegalArgumentException, InvocationTargetException {
@@ -34,7 +33,7 @@ public class PersistenceStrategyHelper {
 				Class<?>[] parameterTypes = constructors[i].getParameterTypes();
 				if (parameterTypes.length == 0) // no parameters
 					return (ProcessObjectPersistenceStrategy)clazz.newInstance();
-				if (parameterTypes.length == 1 && MongoSessionStore.class.equals(parameterTypes[0]))
+				if (parameterTypes.length == 1 && MongoProcessStore.class.equals(parameterTypes[0]))
 					return (ProcessObjectPersistenceStrategy)constructors[i].newInstance(store);
 			}
 		}

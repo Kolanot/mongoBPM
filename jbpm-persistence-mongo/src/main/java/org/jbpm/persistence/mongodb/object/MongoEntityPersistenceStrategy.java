@@ -4,8 +4,7 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 
-import org.jbpm.persistence.mongodb.MongoSessionStore;
-
+import org.jbpm.persistence.mongodb.MongoProcessStore;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Polymorphic;
@@ -19,9 +18,9 @@ public class MongoEntityPersistenceStrategy implements
 	 */
 	private static final long serialVersionUID = 1L;
 	@Transient
-	private final MongoSessionStore store;
+	private final MongoProcessStore store;
 	
-	public MongoEntityPersistenceStrategy(MongoSessionStore store) {
+	public MongoEntityPersistenceStrategy(MongoProcessStore store) {
 		this.store = store;
 	}
 	

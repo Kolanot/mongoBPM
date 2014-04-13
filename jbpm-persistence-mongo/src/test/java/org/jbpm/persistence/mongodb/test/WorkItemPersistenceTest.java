@@ -20,9 +20,8 @@ import org.drools.core.process.core.impl.ParameterDefinitionImpl;
 import org.drools.core.process.core.impl.WorkImpl;
 import org.drools.core.reteoo.ReteooRuleBase;
 import org.drools.core.runtime.process.ProcessRuntimeFactory;
-import org.jbpm.persistence.mongodb.MongoSessionStore;
+import org.jbpm.persistence.mongodb.MongoProcessStore;
 import org.jbpm.persistence.mongodb.instance.MongoProcessInstanceInfo;
-import org.jbpm.persistence.mongodb.session.MongoSessionInfo;
 import org.jbpm.persistence.mongodb.test.object.Person;
 import org.jbpm.process.core.context.variable.Variable;
 import org.jbpm.process.instance.ProcessRuntimeFactoryServiceImpl;
@@ -42,7 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class WorkItemPersistenceTest extends AbstractMongoBaseTest {
+public class WorkItemPersistenceTest extends AbstractMongoBPMBaseTest {
 
     private static final Logger logger = LoggerFactory.getLogger(WorkItemPersistenceTest.class);
     
@@ -234,12 +233,9 @@ public class WorkItemPersistenceTest extends AbstractMongoBaseTest {
         int newNumProcInsts = ksession.getProcessInstances().size();
         assertTrue( (newNumProcInsts - numProcInsts) == 1);
         
-        MongoSessionStore store = (MongoSessionStore)getEnv().get(MongoSessionStore.envKey);
+        MongoProcessStore store = (MongoProcessStore)getEnv().get(MongoProcessStore.envKey);
         long processInstanceId = processInstance.getId();
-        MongoSessionInfo sessionInfo = store.findSessionInfoByProcessInstanceId(processInstanceId);
-        assertNotNull(sessionInfo);
-        assertEquals("two session must be equal", new Long(ksession.getId()), new Long(sessionInfo.getId()));
-        MongoProcessInstanceInfo processInstanceInfoMadeInThisTest = sessionInfo.getProcessdata().getProcessInstance(processInstanceId);
+        MongoProcessInstanceInfo processInstanceInfoMadeInThisTest = store.findProcessInstanceInfo(processInstanceId);
         long processInstanceId2 = processInstanceInfoMadeInThisTest.getProcessInstanceId();
         ProcessInstance procInstLoadFromMongo = ksession.getProcessInstance(processInstanceId2);
         assertNotNull("ProcessInstance of ProcessInstanceInfo from this test is not filled and null!", 

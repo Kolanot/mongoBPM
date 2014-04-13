@@ -28,7 +28,7 @@ import org.kie.internal.runtime.StatefulKnowledgeSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PersistentStatefulSessionTest extends AbstractMongoBaseTest {
+public class PersistentStatefulSessionTest extends AbstractMongoBPMBaseTest {
 
     private static final Logger logger = LoggerFactory.getLogger(PersistentStatefulSessionTest.class);
     

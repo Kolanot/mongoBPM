@@ -35,7 +35,7 @@ import org.jbpm.bpmn2.xml.BPMNDISemanticModule;
 import org.jbpm.bpmn2.xml.BPMNSemanticModule;
 import org.jbpm.bpmn2.xml.XmlBPMNProcessDumper;
 import org.jbpm.compiler.xml.XmlProcessReader;
-import org.jbpm.persistence.mongodb.test.AbstractMongoBaseTest;
+import org.jbpm.persistence.mongodb.test.AbstractMongoBPMBaseTest;
 import org.jbpm.ruleflow.core.RuleFlowProcess;
 import org.jbpm.workflow.instance.impl.WorkflowProcessInstanceImpl;
 import org.junit.Rule;
@@ -71,7 +71,7 @@ import org.xml.sax.SAXException;
 /**
  * Base test case for the jbpm-bpmn2 module.
  */
-public abstract class JbpmBpmn2TestCase extends AbstractMongoBaseTest {
+public abstract class JbpmBpmn2TestCase extends AbstractMongoBPMBaseTest {
     private static final Logger log = LoggerFactory.getLogger(JbpmBpmn2TestCase.class);
 
     public static String[] txStateName = { "ACTIVE", "MARKED_ROLLBACK",

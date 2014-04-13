@@ -30,9 +30,8 @@ import org.drools.core.SessionConfiguration;
 import org.drools.core.command.impl.CommandBasedStatefulKnowledgeSession;
 import org.drools.core.command.impl.FireAllRulesInterceptor;
 import org.drools.core.command.impl.LoggingInterceptor;
-import org.drools.persistence.SingleSessionCommandService;
 import org.jbpm.persistence.mongodb.MongoSingleSessionCommandService;
-import org.jbpm.persistence.mongodb.test.AbstractMongoBaseTest;
+import org.jbpm.persistence.mongodb.test.AbstractMongoBPMBaseTest;
 import org.jbpm.persistence.mongodb.test.object.Person;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,7 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @RunWith(Parameterized.class)
-public class MongoPersistentStatefulSessionTest extends AbstractMongoBaseTest {
+public class MongoPersistentStatefulSessionTest extends AbstractMongoBPMBaseTest {
 
     private static Logger logger = LoggerFactory.getLogger(MongoPersistentStatefulSessionTest.class);
     
