@@ -16,6 +16,7 @@ import org.mongodb.morphia.annotations.Property;
 import org.mongodb.morphia.annotations.Transient;
 import org.jbpm.persistence.mongodb.correlation.MongoCorrelationKey;
 import org.jbpm.persistence.mongodb.object.MongoJavaSerializable;
+import org.jbpm.persistence.mongodb.timer.EmbeddedProcessTimer;
 import org.jbpm.persistence.mongodb.workitem.MongoWorkItemInfo;
 import org.kie.api.runtime.process.ProcessInstance;
 import org.drools.core.process.instance.WorkItem;
@@ -306,18 +307,15 @@ public class MongoProcessInstanceInfo implements Serializable {
 	public Map<String, Integer> getIterationLevels() {
 		return iterationLevels;
 	}
-	
+
 	@Embedded
     public static class EmbeddedNodeInstance implements Serializable {
-    	/**
-		 * 
-		 */
 		private static final long serialVersionUID = 1L;
 		long id;
     	long nodeId;
     	int level;
     	String nodeClassName;
-    	List<Long> timerIds = new ArrayList<Long>();
+    	List<EmbeddedProcessTimer> timers = new ArrayList<EmbeddedProcessTimer>();
     	long workItemId;
     	long subProcessInstanceId;
     	Map<Long, Integer> triggers;
@@ -352,13 +350,13 @@ public class MongoProcessInstanceInfo implements Serializable {
 			this.nodeClassName = nodeClassName;
 		}
 		
-		public List<Long> getTimerIds() {
-			return timerIds;
+		public List<EmbeddedProcessTimer> getTimers() {
+			return timers;
 		}
-		public void setTimerIds(List<Long> timers) {
+		public void setTimers(List<EmbeddedProcessTimer> timers) {
+			this.timers.clear();
 			if (timers != null) {
-				this.timerIds.clear();
-				this.timerIds.addAll(timers);
+				this.timers.addAll(timers);
 			}
 		}
 

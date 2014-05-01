@@ -10,16 +10,24 @@ import java.util.Map;
 import java.util.Set;
 
 import org.drools.core.common.InternalKnowledgeRuntime;
+import org.drools.core.time.Trigger;
+import org.drools.core.time.impl.DefaultJobHandle;
+import org.drools.core.time.impl.TimerJobInstance;
 import org.jbpm.persistence.mongodb.instance.MongoProcessInstanceInfo.EmbeddedNodeInstance;
 import org.jbpm.persistence.mongodb.object.MongoJavaSerializable;
+import org.jbpm.persistence.mongodb.timer.EmbeddedProcessTimer;
+import org.jbpm.persistence.mongodb.timer.MongoTimerMarshaller;
 import org.jbpm.process.core.Context;
 import org.jbpm.process.core.context.exclusive.ExclusiveGroup;
 import org.jbpm.process.core.context.swimlane.SwimlaneContext;
 import org.jbpm.process.core.context.variable.VariableScope;
 import org.jbpm.process.instance.ContextInstance;
+import org.jbpm.process.instance.InternalProcessRuntime;
 import org.jbpm.process.instance.context.exclusive.ExclusiveGroupInstance;
 import org.jbpm.process.instance.context.swimlane.SwimlaneContextInstance;
 import org.jbpm.process.instance.context.variable.VariableScopeInstance;
+import org.jbpm.process.instance.timer.TimerInstance;
+import org.jbpm.process.instance.timer.TimerManager;
 import org.jbpm.ruleflow.instance.RuleFlowProcessInstance;
 import org.jbpm.workflow.instance.impl.NodeInstanceImpl;
 import org.jbpm.workflow.instance.impl.WorkflowProcessInstanceImpl;
@@ -28,10 +36,10 @@ import org.jbpm.workflow.instance.node.DynamicNodeInstance;
 import org.jbpm.workflow.instance.node.EventNodeInstance;
 import org.jbpm.workflow.instance.node.ForEachNodeInstance;
 import org.jbpm.workflow.instance.node.HumanTaskNodeInstance;
-import org.jbpm.workflow.instance.node.ActionNodeInstance;
 import org.jbpm.workflow.instance.node.JoinInstance;
 import org.jbpm.workflow.instance.node.MilestoneNodeInstance;
 import org.jbpm.workflow.instance.node.RuleSetNodeInstance;
+import org.jbpm.workflow.instance.node.StateBasedNodeInstance;
 import org.jbpm.workflow.instance.node.StateNodeInstance;
 import org.jbpm.workflow.instance.node.SubProcessNodeInstance;
 import org.jbpm.workflow.instance.node.TimerNodeInstance;
@@ -131,33 +139,33 @@ public class MongoProcessInstanceMarshaller {
     }
 
     private static void serializeNodeInstanceContent(EmbeddedNodeInstance eni, NodeInstance nodeInstance) throws NotSerializableException {
-        if (nodeInstance instanceof RuleSetNodeInstance) {
-            eni.setTimerIds(((RuleSetNodeInstance) nodeInstance).getTimerInstances());
-        } else if (nodeInstance instanceof ActionNodeInstance) {
-        } else if (nodeInstance instanceof HumanTaskNodeInstance) {
+    	InternalKnowledgeRuntime kruntime = ((WorkflowProcessInstanceImpl)nodeInstance.getProcessInstance()).getKnowledgeRuntime();
+        TimerManager timerManager = ((InternalProcessRuntime)kruntime.getProcessRuntime()).getTimerManager();
+        if (nodeInstance instanceof StateBasedNodeInstance) {
+    		for (long timerId : ((StateBasedNodeInstance) nodeInstance).getTimerInstances()) {
+    			TimerInstance ti = timerManager.getTimerMap().get(timerId);
+    			Trigger trigger = null;
+    			if (ti.getJobHandle() instanceof DefaultJobHandle) {
+    				TimerJobInstance timerJobInstance = ((DefaultJobHandle)ti.getJobHandle()).getTimerJobInstance();
+    				trigger = timerJobInstance == null? null:timerJobInstance.getTrigger();
+    			}
+    			if (trigger != null) eni.getTimers().add(MongoTimerMarshaller.serialize(ti, trigger));
+    		}
+    	}
+    	
+        if (nodeInstance instanceof HumanTaskNodeInstance) {
             eni.setWorkItemId(((HumanTaskNodeInstance) nodeInstance).getWorkItemId());
-            eni.setTimerIds(((HumanTaskNodeInstance) nodeInstance).getTimerInstances());
         } else if (nodeInstance instanceof WorkItemNodeInstance) {
             eni.setWorkItemId(((WorkItemNodeInstance) nodeInstance).getWorkItemId());
-            eni.setTimerIds(((WorkItemNodeInstance) nodeInstance).getTimerInstances());
         } else if (nodeInstance instanceof SubProcessNodeInstance) {
             eni.setSubProcessInstanceId(((SubProcessNodeInstance) nodeInstance).getProcessInstanceId());
-            eni.setTimerIds(((SubProcessNodeInstance) nodeInstance).getTimerInstances());
-        } else if (nodeInstance instanceof MilestoneNodeInstance) {
-            eni.setTimerIds(((MilestoneNodeInstance) nodeInstance).getTimerInstances());
-        } else if (nodeInstance instanceof EventNodeInstance) {
-    	} else if (nodeInstance instanceof TimerNodeInstance) {
-    		eni.getTimerIds().add(((TimerNodeInstance) nodeInstance).getTimerId());
         } else if (nodeInstance instanceof JoinInstance) {
             eni.setTriggers(((JoinInstance) nodeInstance).getTriggers());
-        } else if (nodeInstance instanceof StateNodeInstance) {
-            eni.setTimerIds(((StateNodeInstance) nodeInstance).getTimerInstances());
         } else if (nodeInstance instanceof CompositeContextNodeInstance) {
         	if (nodeInstance instanceof DynamicNodeInstance) {
         	} else {
         	}
             CompositeContextNodeInstance compositeContextNodeInstance = (CompositeContextNodeInstance) nodeInstance;
-            eni.setTimerIds(((CompositeContextNodeInstance) nodeInstance).getTimerInstances());
             VariableScopeInstance variableScopeInstance = (VariableScopeInstance) compositeContextNodeInstance.getContextInstance(VariableScope.VARIABLE_SCOPE);
             serializeVariables(variableScopeInstance, eni.getVariables());
             List<NodeInstance> nodeInstances = new ArrayList<NodeInstance>(compositeContextNodeInstance.getNodeInstances());
@@ -302,37 +310,19 @@ public class MongoProcessInstanceMarshaller {
         NodeInstanceImpl nodeInstance = null;
         if (varClass.equals(RuleSetNodeInstance.class)) {
             nodeInstance = new RuleSetNodeInstance();
-            if (ein.getTimerIds() != null && !ein.getTimerIds().isEmpty()) {
-                ((RuleSetNodeInstance) nodeInstance).internalSetTimerInstances(ein.getTimerIds());
-            }
         } else if (varClass.equals(HumanTaskNodeInstance.class)) {
             nodeInstance = new HumanTaskNodeInstance();
             ((HumanTaskNodeInstance) nodeInstance).internalSetWorkItemId(ein.getWorkItemId());
-            if (ein.getTimerIds() != null && !ein.getTimerIds().isEmpty()) {
-                ((HumanTaskNodeInstance) nodeInstance).internalSetTimerInstances(ein.getTimerIds());
-            }
         } else if (varClass.equals(WorkItemNodeInstance.class)) {
             nodeInstance = new WorkItemNodeInstance();
             ((WorkItemNodeInstance) nodeInstance).internalSetWorkItemId(ein.getWorkItemId());
-            if (ein.getTimerIds() != null && !ein.getTimerIds().isEmpty()) {
-                ((WorkItemNodeInstance) nodeInstance).internalSetTimerInstances(ein.getTimerIds());
-            }
         } else if (varClass.equals(SubProcessNodeInstance.class)) {
             nodeInstance = new SubProcessNodeInstance();
             ((SubProcessNodeInstance) nodeInstance).internalSetProcessInstanceId(ein.getSubProcessInstanceId());
-            if (ein.getTimerIds() != null && !ein.getTimerIds().isEmpty()) {
-                ((SubProcessNodeInstance) nodeInstance).internalSetTimerInstances(ein.getTimerIds());
-            }
         } else if (varClass.equals(MilestoneNodeInstance.class)) {
             nodeInstance = new MilestoneNodeInstance();
-            if (ein.getTimerIds() != null && !ein.getTimerIds().isEmpty()) {
-               ((MilestoneNodeInstance) nodeInstance).internalSetTimerInstances(ein.getTimerIds());
-            }
         } else if (varClass.equals(TimerNodeInstance.class)) {
             nodeInstance = new TimerNodeInstance();
-            if (ein.getTimerIds() != null && !ein.getTimerIds().isEmpty()) {
-                ((TimerNodeInstance) nodeInstance).internalSetTimerId(ein.getTimerIds().get(0));
-            }
         } else if (varClass.equals(EventNodeInstance.class)) {
             nodeInstance = new EventNodeInstance();
         } else if (varClass.equals(JoinInstance.class)) {
@@ -340,23 +330,31 @@ public class MongoProcessInstanceMarshaller {
             ((JoinInstance) nodeInstance).internalSetTriggers(ein.getTriggers());
         } else if (varClass.equals(CompositeContextNodeInstance.class)) {
             nodeInstance = new CompositeContextNodeInstance();
-            if (ein.getTimerIds() != null && !ein.getTimerIds().isEmpty()) {
-                ((CompositeContextNodeInstance) nodeInstance).internalSetTimerInstances(ein.getTimerIds());
-            }
         } else if (varClass.equals(ForEachNodeInstance.class)) {
             nodeInstance = new ForEachNodeInstance();
         } else if (varClass.equals(DynamicNodeInstance.class)) {
             nodeInstance = new DynamicNodeInstance();
-            if (ein.getTimerIds() != null && !ein.getTimerIds().isEmpty()) {
-                ((DynamicNodeInstance) nodeInstance).internalSetTimerInstances(ein.getTimerIds());
-            }
         } else if (varClass.equals(StateNodeInstance.class)) {
             nodeInstance = new StateNodeInstance();
-            if (ein.getTimerIds() != null && !ein.getTimerIds().isEmpty()) {
-                ((StateNodeInstance) nodeInstance).internalSetTimerInstances(ein.getTimerIds());
-            }
         } else {
             throw new IllegalArgumentException("Unknown node type: " + varClass.getName());
+        }
+        if (nodeInstance instanceof StateBasedNodeInstance) {
+        	if (ein.getTimers() != null && !ein.getTimers().isEmpty()) {
+            	InternalKnowledgeRuntime kruntime = ((WorkflowProcessInstanceImpl)processInstance).getKnowledgeRuntime();
+                TimerManager timerManager = ((InternalProcessRuntime)kruntime.getProcessRuntime()).getTimerManager();
+        		List<Long> timerIds = new ArrayList<Long>();
+        		for (EmbeddedProcessTimer ept: ein.getTimers()) {
+        			try {
+						MongoTimerMarshaller.deserialize(ept, timerManager, kruntime);
+	        			timerIds.add(ept.getTimerInstance().getId());
+					} catch (ClassNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+        		}
+        		((StateBasedNodeInstance)nodeInstance).internalSetTimerInstances(timerIds);
+        	}
         }
         return nodeInstance;
     }
