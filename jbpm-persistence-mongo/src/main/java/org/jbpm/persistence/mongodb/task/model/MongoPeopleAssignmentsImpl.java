@@ -16,171 +16,172 @@
 
 package org.jbpm.persistence.mongodb.task.model;
 
-import static org.jbpm.persistence.mongodb.task.model.MongoTaskDataImpl.convertToUserImpl;
+import static org.jbpm.persistence.mongodb.task.util.MongoPersistenceUtil.*;
 
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.jbpm.persistence.mongodb.task.util.CollectionUtils;
-import org.kie.api.task.model.Group;
 import org.kie.api.task.model.OrganizationalEntity;
+import org.kie.api.task.model.PeopleAssignments;
 import org.kie.api.task.model.User;
 import org.kie.internal.task.api.model.InternalPeopleAssignments;
-
 import org.mongodb.morphia.annotations.Embedded;
 
 @Embedded
 public class MongoPeopleAssignmentsImpl implements InternalPeopleAssignments {
-	
-    private MongoUserImpl                       taskInitiator;
 
-    private List<OrganizationalEntity> potentialOwners        = Collections.emptyList();
+	private MongoUserImpl taskInitiator;
 
-    private List<OrganizationalEntity> excludedOwners         = Collections.emptyList();
+	private List<OrganizationalEntity> potentialOwners = Collections.emptyList();
 
-    private List<OrganizationalEntity> taskStakeholders       = Collections.emptyList();
+	private List<OrganizationalEntity> excludedOwners = Collections.emptyList();
 
-    private List<OrganizationalEntity> businessAdministrators = Collections.emptyList();
+	private List<OrganizationalEntity> taskStakeholders = Collections.emptyList();
 
-    private List<OrganizationalEntity> recipients             = Collections.emptyList();
+	private List<OrganizationalEntity> businessAdministrators = Collections.emptyList();
 
-    public MongoPeopleAssignmentsImpl() {
+	private List<OrganizationalEntity> recipients = Collections.emptyList();
 
-    }
+	public MongoPeopleAssignmentsImpl() {
+	}
 
-    public void writeExternal(ObjectOutput out) throws IOException {
-        if ( taskInitiator != null ) {
-            out.writeBoolean( true );
-            taskInitiator.writeExternal( out );
-        } else {
-            out.writeBoolean( false );
-        }
-        CollectionUtils.writeOrganizationalEntityList( potentialOwners,
-                                                       out );
-        CollectionUtils.writeOrganizationalEntityList( excludedOwners,
-                                                       out );
-        CollectionUtils.writeOrganizationalEntityList( taskStakeholders,
-                                                       out );
-        CollectionUtils.writeOrganizationalEntityList( businessAdministrators,
-                                                       out );
-        CollectionUtils.writeOrganizationalEntityList( recipients,
-                                                       out );
-    }
+	public MongoPeopleAssignmentsImpl(PeopleAssignments peopleAssignments) {
+		taskInitiator = new MongoUserImpl(peopleAssignments.getTaskInitiator());
+		businessAdministrators = convertToPersistentOrganizationalEntity(peopleAssignments
+				.getBusinessAdministrators());
+		potentialOwners = convertToPersistentOrganizationalEntity(peopleAssignments
+				.getPotentialOwners());
+		if (peopleAssignments instanceof InternalPeopleAssignments) {
+			InternalPeopleAssignments intPAS = (InternalPeopleAssignments)peopleAssignments;
+			excludedOwners = convertToPersistentOrganizationalEntity(intPAS.getExcludedOwners());
+			taskStakeholders = convertToPersistentOrganizationalEntity(intPAS.getTaskStakeholders());
+			recipients = convertToPersistentOrganizationalEntity(intPAS.getRecipients());
+		}
+	}
 
-    public void readExternal(ObjectInput in) throws IOException,
-                                            ClassNotFoundException {
-        if ( in.readBoolean() ) {
-            taskInitiator = new MongoUserImpl();
-            taskInitiator.readExternal( in );
-        }
-        potentialOwners = CollectionUtils.readOrganizationalEntityList( in );
-        excludedOwners = CollectionUtils.readOrganizationalEntityList( in );
-        taskStakeholders = CollectionUtils.readOrganizationalEntityList( in );
-        businessAdministrators = CollectionUtils.readOrganizationalEntityList( in );
-        recipients = CollectionUtils.readOrganizationalEntityList( in );
-    }
+	public void writeExternal(ObjectOutput out) throws IOException {
+		if (taskInitiator != null) {
+			out.writeBoolean(true);
+			taskInitiator.writeExternal(out);
+		} else {
+			out.writeBoolean(false);
+		}
+		CollectionUtils.writeOrganizationalEntityList(potentialOwners, out);
+		CollectionUtils.writeOrganizationalEntityList(excludedOwners, out);
+		CollectionUtils.writeOrganizationalEntityList(taskStakeholders, out);
+		CollectionUtils.writeOrganizationalEntityList(businessAdministrators,
+				out);
+		CollectionUtils.writeOrganizationalEntityList(recipients, out);
+	}
 
-    public User getTaskInitiator() {
-        return taskInitiator;
-    }
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		if (in.readBoolean()) {
+			taskInitiator = new MongoUserImpl();
+			taskInitiator.readExternal(in);
+		}
+		potentialOwners = CollectionUtils.readOrganizationalEntityList(in);
+		excludedOwners = CollectionUtils.readOrganizationalEntityList(in);
+		taskStakeholders = CollectionUtils.readOrganizationalEntityList(in);
+		businessAdministrators = CollectionUtils
+				.readOrganizationalEntityList(in);
+		recipients = CollectionUtils.readOrganizationalEntityList(in);
+	}
 
-    public void setTaskInitiator(User taskInitiator) {
-        this.taskInitiator =  convertToUserImpl(taskInitiator);
-    }
+	public User getTaskInitiator() {
+		return taskInitiator;
+	}
 
-    public List<OrganizationalEntity> getPotentialOwners() {
-        return potentialOwners;
-    }
+	public void setTaskInitiator(User taskInitiator) {
+		this.taskInitiator = convertToUserImpl(taskInitiator);
+	}
 
-    public void setPotentialOwners(List<OrganizationalEntity> potentialOwners) {
-        this.potentialOwners = convertToPersistentOrganizationalEntity(potentialOwners);
-    }
+	public List<OrganizationalEntity> getPotentialOwners() {
+		return potentialOwners;
+	}
 
-    public List<OrganizationalEntity> getExcludedOwners() {
-        return excludedOwners;
-    }
+	public void setPotentialOwners(List<OrganizationalEntity> potentialOwners) {
+		this.potentialOwners = convertToPersistentOrganizationalEntity(potentialOwners);
+	}
 
-    public void setExcludedOwners(List<OrganizationalEntity> excludedOwners) {
-        this.excludedOwners = convertToPersistentOrganizationalEntity(excludedOwners);
-    }
+	public List<OrganizationalEntity> getExcludedOwners() {
+		return excludedOwners;
+	}
 
-    public List<OrganizationalEntity> getTaskStakeholders() {
-        return taskStakeholders;
-    }
+	public void setExcludedOwners(List<OrganizationalEntity> excludedOwners) {
+		this.excludedOwners = convertToPersistentOrganizationalEntity(excludedOwners);
+	}
 
-    public void setTaskStakeholders(List<OrganizationalEntity> taskStakeholders) {
-        this.taskStakeholders = convertToPersistentOrganizationalEntity(taskStakeholders);
-    }
+	public List<OrganizationalEntity> getTaskStakeholders() {
+		return taskStakeholders;
+	}
 
-    public List<OrganizationalEntity> getBusinessAdministrators() {
-        return businessAdministrators;
-    }
+	public void setTaskStakeholders(List<OrganizationalEntity> taskStakeholders) {
+		this.taskStakeholders = convertToPersistentOrganizationalEntity(taskStakeholders);
+	}
 
-    public void setBusinessAdministrators(List<OrganizationalEntity> businessAdministrators) {
-        this.businessAdministrators = convertToPersistentOrganizationalEntity(businessAdministrators);
-    }
+	public List<OrganizationalEntity> getBusinessAdministrators() {
+		return businessAdministrators;
+	}
 
-    public List<OrganizationalEntity> getRecipients() {
-        return recipients;
-    }
+	public void setBusinessAdministrators(
+			List<OrganizationalEntity> businessAdministrators) {
+		this.businessAdministrators = convertToPersistentOrganizationalEntity(businessAdministrators);
+	}
 
-    public void setRecipients(List<OrganizationalEntity> recipients) {
-        this.recipients = convertToPersistentOrganizationalEntity(recipients);
-    }
+	public List<OrganizationalEntity> getRecipients() {
+		return recipients;
+	}
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + CollectionUtils.hashCode( businessAdministrators );
-        result = prime * result + CollectionUtils.hashCode( excludedOwners );
-        result = prime * result + ((potentialOwners == null) ? 0 : CollectionUtils.hashCode( potentialOwners ));
-        result = prime * result + CollectionUtils.hashCode( recipients );
-        result = prime * result + ((taskInitiator == null) ? 0 : taskInitiator.hashCode());
-        result = prime * result + CollectionUtils.hashCode( taskStakeholders );
-        return result;
-    }
+	public void setRecipients(List<OrganizationalEntity> recipients) {
+		this.recipients = convertToPersistentOrganizationalEntity(recipients);
+	}
 
-    @Override
-    public boolean equals(Object obj) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( !(obj instanceof MongoPeopleAssignmentsImpl) ) return false;
-        MongoPeopleAssignmentsImpl other = (MongoPeopleAssignmentsImpl) obj;
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ CollectionUtils.hashCode(businessAdministrators);
+		result = prime * result + CollectionUtils.hashCode(excludedOwners);
+		result = prime
+				* result
+				+ ((potentialOwners == null) ? 0 : CollectionUtils
+						.hashCode(potentialOwners));
+		result = prime * result + CollectionUtils.hashCode(recipients);
+		result = prime * result
+				+ ((taskInitiator == null) ? 0 : taskInitiator.hashCode());
+		result = prime * result + CollectionUtils.hashCode(taskStakeholders);
+		return result;
+	}
 
-        if ( taskInitiator == null ) {
-            if ( other.taskInitiator != null ) return false;
-        } else if ( !taskInitiator.equals( other.taskInitiator ) ) return false;
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (!(obj instanceof MongoPeopleAssignmentsImpl))
+			return false;
+		MongoPeopleAssignmentsImpl other = (MongoPeopleAssignmentsImpl) obj;
 
-        return CollectionUtils.equals( businessAdministrators,
-                                       other.businessAdministrators ) && CollectionUtils.equals( excludedOwners,
-                                                                                                 other.excludedOwners ) && CollectionUtils.equals( potentialOwners,
-                                                                                                                                                   other.potentialOwners ) && CollectionUtils.equals( recipients,
-                                                                                                                                                                                                      other.recipients )
-               && CollectionUtils.equals( taskStakeholders,
-                                          other.taskStakeholders );
-    }
+		if (taskInitiator == null) {
+			if (other.taskInitiator != null)
+				return false;
+		} else if (!taskInitiator.equals(other.taskInitiator))
+			return false;
 
-    static List<OrganizationalEntity> convertToPersistentOrganizationalEntity(List<OrganizationalEntity> orgEntList) { 
-        List<OrganizationalEntity> persistentOrgEnts = orgEntList;
-        if( persistentOrgEnts != null && ! persistentOrgEnts.isEmpty() ) {
-            persistentOrgEnts = new ArrayList<OrganizationalEntity>(orgEntList.size());
-            for( OrganizationalEntity orgEnt : orgEntList ) { 
-                if( orgEnt instanceof MongoUserImpl || orgEnt instanceof MongoGroupImpl ) {
-                    persistentOrgEnts.add(orgEnt);
-                } else if( orgEnt instanceof User ) { 
-                    persistentOrgEnts.add(new MongoUserImpl(orgEnt.getId())); 
-                } else if( orgEnt instanceof Group ) { 
-                    persistentOrgEnts.add(new MongoGroupImpl(orgEnt.getId())); 
-                } else { 
-                    throw new IllegalStateException("Unknown user or group object: " + orgEnt.getClass().getName() );
-                }
-            }
-        } 
-        return persistentOrgEnts;
-    }
+		return CollectionUtils.equals(businessAdministrators,
+				other.businessAdministrators)
+				&& CollectionUtils.equals(excludedOwners, other.excludedOwners)
+				&& CollectionUtils.equals(potentialOwners,
+						other.potentialOwners)
+				&& CollectionUtils.equals(recipients, other.recipients)
+				&& CollectionUtils.equals(taskStakeholders,
+						other.taskStakeholders);
+	}
 }

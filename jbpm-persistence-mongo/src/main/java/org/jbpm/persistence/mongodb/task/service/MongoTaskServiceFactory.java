@@ -13,14 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jbpm.persistence.mongodb;
+package org.jbpm.persistence.mongodb.task.service;
 
 import org.jbpm.runtime.manager.impl.SimpleRuntimeEnvironment;
 import org.jbpm.services.task.HumanTaskConfigurator;
-import org.jbpm.services.task.HumanTaskServiceFactory;
-import org.kie.api.runtime.manager.RegisterableItemsFactory;
 import org.kie.api.runtime.manager.RuntimeEnvironment;
-import org.kie.api.task.TaskLifeCycleEventListener;
 import org.kie.api.task.TaskService;
 import org.kie.internal.runtime.manager.TaskServiceFactory;
 
@@ -46,7 +43,12 @@ public class MongoTaskServiceFactory implements TaskServiceFactory {
    		return providedTaskService;
     }
 
-    @Override
+    public HumanTaskConfigurator newTaskServiceConfigurator(){
+        
+        return new MongoHumanTaskServiceConfigurator(runtimeEnvironment);
+    }
+    
+  @Override
     public void close() {
         
     }

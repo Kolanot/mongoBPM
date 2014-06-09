@@ -22,20 +22,14 @@ import org.drools.core.RuleBase;
 import org.drools.core.SessionConfiguration;
 import org.drools.core.command.CommandService;
 import org.drools.core.command.Interceptor;
-import org.drools.core.command.impl.AbstractInterceptor;
-import org.drools.core.command.impl.DefaultCommandService;
 import org.drools.core.command.impl.FixedKnowledgeCommandContext;
-import org.drools.core.command.impl.GenericCommand;
 import org.drools.core.command.impl.KnowledgeCommandContext;
 import org.drools.core.command.runtime.DisposeCommand;
 import org.drools.core.common.EndOperationListener;
 import org.drools.core.common.InternalKnowledgeRuntime;
 import org.drools.core.impl.KnowledgeBaseImpl;
 import org.drools.core.time.AcceptsTimerJobFactoryManager;
-import org.jbpm.persistence.mongodb.workitem.MongoWorkItemManager;
-import org.jbpm.process.instance.InternalProcessRuntime;
 import org.kie.api.KieBase;
-import org.kie.api.command.BatchExecutionCommand;
 import org.kie.api.command.Command;
 import org.kie.internal.command.Context;
 import org.kie.api.runtime.Environment;
@@ -105,7 +99,7 @@ public class MongoSingleSessionCommandService
                                                           this.ksession,
                                                           null );
 
-        this.commandService = new TransactionInterceptor(kContext);
+        this.commandService = new MongoCommandInterceptor(kContext, ksession, env);
 
         ((AcceptsTimerJobFactoryManager) ((InternalKnowledgeRuntime) ksession).getTimerService()).getTimerJobFactoryManager().setCommandService( this );
 
@@ -166,7 +160,7 @@ public class MongoSingleSessionCommandService
                                                               null );
         }
 
-        this.commandService = new TransactionInterceptor(kContext);
+        this.commandService = new MongoCommandInterceptor(kContext, ksession, env);
     }
 
 	public Context getContext() {
@@ -214,6 +208,7 @@ public class MongoSingleSessionCommandService
 	    }
     }
 
+/*    
     private class TransactionInterceptor extends AbstractInterceptor {
 
         public TransactionInterceptor(Context context) {
@@ -258,4 +253,5 @@ public class MongoSingleSessionCommandService
             }
         }
     }
+    */
 }

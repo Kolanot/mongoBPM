@@ -23,70 +23,84 @@ import java.util.Collections;
 import java.util.List;
 
 import org.jbpm.persistence.mongodb.task.util.CollectionUtils;
+import org.jbpm.persistence.mongodb.task.util.MongoPersistenceUtil;
 import org.kie.api.task.model.OrganizationalEntity;
 import org.kie.internal.task.api.model.AllowedToDelegate;
+import org.kie.internal.task.api.model.Delegation;
 
-public class MongoDelegationImpl  implements org.kie.internal.task.api.model.Delegation {
-    private AllowedToDelegate                    allowedToDelegate;
-    
-    private List<OrganizationalEntity> delegates = Collections.emptyList();
-    
-    public void writeExternal(ObjectOutput out) throws IOException {
-        if ( allowedToDelegate != null ) {
-            out.writeBoolean( true );
-            out.writeUTF( allowedToDelegate.toString() );
-        } else {
-            out.writeBoolean( false );
-        }
-        CollectionUtils.writeOrganizationalEntityList( delegates, out );       
-    } 
-    
-    public void readExternal(ObjectInput in) throws IOException,
-                                            ClassNotFoundException {
-        if ( in.readBoolean() ) {
-            allowedToDelegate = AllowedToDelegate.valueOf( in.readUTF() );
-        }
-        delegates = CollectionUtils.readOrganizationalEntityList( in );
-    }       
+public class MongoDelegationImpl implements Delegation {
+	private AllowedToDelegate allowedToDelegate;
+	private List<OrganizationalEntity> delegates = Collections.emptyList();
 
-    public AllowedToDelegate getAllowed() {
-        return allowedToDelegate;
-    }    
-    
-    public void setAllowed(AllowedToDelegate allowedToDelegate) {
-        this.allowedToDelegate = allowedToDelegate;
-    }
+	public MongoDelegationImpl() {
+	}
 
-    public List<OrganizationalEntity> getDelegates() {
-        return delegates;
-    }
-    
+	public MongoDelegationImpl(Delegation delegation) {
+		this.allowedToDelegate = delegation.getAllowed();
+		this.delegates = MongoPersistenceUtil.convertToPersistentOrganizationalEntity(delegation.getDelegates());
+	}
 
-    public void setDelegates(List<OrganizationalEntity> delegates) {
-        this.delegates = delegates;
-    }    
-    
-    
+	public void writeExternal(ObjectOutput out) throws IOException {
+		if (allowedToDelegate != null) {
+			out.writeBoolean(true);
+			out.writeUTF(allowedToDelegate.toString());
+		} else {
+			out.writeBoolean(false);
+		}
+		CollectionUtils.writeOrganizationalEntityList(delegates, out);
+	}
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((allowedToDelegate == null) ? 0 : allowedToDelegate.hashCode());
-        result = prime * result + CollectionUtils.hashCode( delegates );
-        return result;
-    }
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		if (in.readBoolean()) {
+			allowedToDelegate = AllowedToDelegate.valueOf(in.readUTF());
+		}
+		delegates = CollectionUtils.readOrganizationalEntityList(in);
+	}
 
-    @Override
-    public boolean equals(Object obj) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( !(obj instanceof MongoDelegationImpl) ) return false;
-        MongoDelegationImpl other = (MongoDelegationImpl) obj;
-        if ( allowedToDelegate == null ) {
-            if ( other.allowedToDelegate != null ) return false;
-        } else if ( !allowedToDelegate.equals( other.allowedToDelegate ) ) return false;
-        
-        return CollectionUtils.equals( delegates, other.delegates );
-    }
+	public AllowedToDelegate getAllowed() {
+		return allowedToDelegate;
+	}
+
+	public void setAllowed(AllowedToDelegate allowedToDelegate) {
+		this.allowedToDelegate = allowedToDelegate;
+	}
+
+	public List<OrganizationalEntity> getDelegates() {
+		return delegates;
+	}
+
+	public void setDelegates(List<OrganizationalEntity> delegates) {
+		this.delegates = MongoPersistenceUtil.convertToPersistentOrganizationalEntity(delegates);
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime
+				* result
+				+ ((allowedToDelegate == null) ? 0 : allowedToDelegate
+						.hashCode());
+		result = prime * result + CollectionUtils.hashCode(delegates);
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (!(obj instanceof MongoDelegationImpl))
+			return false;
+		MongoDelegationImpl other = (MongoDelegationImpl) obj;
+		if (allowedToDelegate == null) {
+			if (other.allowedToDelegate != null)
+				return false;
+		} else if (!allowedToDelegate.equals(other.allowedToDelegate))
+			return false;
+
+		return CollectionUtils.equals(delegates, other.delegates);
+	}
 }

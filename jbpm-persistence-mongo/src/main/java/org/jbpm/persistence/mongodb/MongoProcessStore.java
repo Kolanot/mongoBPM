@@ -166,6 +166,11 @@ public class MongoProcessStore {
 		return instanceInfo;
 	}
 	
+	public MongoProcessInstanceInfo findProcessInstanceByTaskId (long taskId) {
+		MongoProcessInstanceInfo instanceInfo = ds.find(MongoProcessInstanceInfo.class).disableValidation().filter("tasks." + taskId+".id", taskId).get();
+		return instanceInfo;
+	}
+	
 	public List<MongoProcessInstanceInfo> getAllProcessInstances() {
 		return ds.find(MongoProcessInstanceInfo.class).asList();
 	}

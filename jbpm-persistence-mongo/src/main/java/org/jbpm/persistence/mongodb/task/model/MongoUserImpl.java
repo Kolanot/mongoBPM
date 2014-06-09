@@ -32,6 +32,10 @@ public class MongoUserImpl extends MongoOrganizationalEntityImpl implements User
         super(id);
     }
     
+    public MongoUserImpl(User user) {
+    	super(user.getId());
+    }
+    
     public void writeExternal(ObjectOutput out) throws IOException {
         super.writeExternal( out );
     } 

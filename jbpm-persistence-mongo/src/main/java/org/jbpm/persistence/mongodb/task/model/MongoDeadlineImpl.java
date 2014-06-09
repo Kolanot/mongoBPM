@@ -16,6 +16,8 @@
 package org.jbpm.persistence.mongodb.task.model;
 
 import java.io.IOException;
+
+
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Collections;
@@ -23,10 +25,12 @@ import java.util.Date;
 import java.util.List;
 
 import org.jbpm.persistence.mongodb.task.util.CollectionUtils;
+import static org.jbpm.persistence.mongodb.task.util.MongoPersistenceUtil.*;
 import org.kie.api.task.model.I18NText;
+import org.kie.internal.task.api.model.Deadline;
 import org.kie.internal.task.api.model.Escalation;
 
-public class MongoDeadlineImpl implements org.kie.internal.task.api.model.Deadline {
+public class MongoDeadlineImpl implements Deadline {
 
     private Long id;
     private List<I18NText> documentation = Collections.emptyList();
@@ -35,6 +39,15 @@ public class MongoDeadlineImpl implements org.kie.internal.task.api.model.Deadli
     
     private Short escalated = 0;
 
+    public MongoDeadlineImpl() {}
+    public MongoDeadlineImpl(Deadline deadline) {
+    	this.id = deadline.getId();
+    	this.date = deadline.getDate();
+    	this.escalated = (short) (deadline.isEscalated()?1:0);
+    	this.documentation = convertToI18NTextImpl(deadline.getDocumentation());
+    	this.escalations = convertToEscalationImpl(deadline.getEscalations());
+    }
+    
     public Boolean isEscalated() {
         if (escalated == null) {
             return null;
@@ -108,7 +121,7 @@ public class MongoDeadlineImpl implements org.kie.internal.task.api.model.Deadli
     }
 
     public void setEscalations(List<Escalation> escalations) {
-        this.escalations = escalations;
+    	this.escalations = convertToEscalationImpl(escalations);
     }
 
    

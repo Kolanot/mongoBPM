@@ -16,18 +16,18 @@
 
 package org.jbpm.persistence.mongodb.task.model;
 
-import static org.jbpm.persistence.mongodb.task.model.MongoTaskDataImpl.*;
+import static org.jbpm.persistence.mongodb.task.util.MongoPersistenceUtil.*;
 
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Date;
 
+import org.kie.api.task.model.Attachment;
 import org.kie.api.task.model.Content;
 import org.kie.api.task.model.User;
 import org.kie.internal.task.api.model.AccessType;
 import org.kie.internal.task.api.model.InternalAttachment;
-
 import org.mongodb.morphia.annotations.Embedded;
 
 @Embedded
@@ -58,6 +58,20 @@ public class MongoAttachmentImpl implements InternalAttachment {
     
     private long   attachmentContentId;
     
+    public MongoAttachmentImpl() {}
+    public MongoAttachmentImpl(Attachment attachment) {
+    	this.id = attachment.getId();
+    	this.name = attachment.getName();
+    	this.accessType = null;
+    	this.attachedAt = attachment.getAttachedAt();
+    	this.attachedBy = convertToUserImpl(attachment.getAttachedBy());
+    	this.contentType = attachment.getContentType();
+    	this.size = attachment.getSize();
+    	this.attachmentContentId = attachment.getAttachmentContentId();
+    	if (attachment instanceof InternalAttachment) {
+    		this.accessType = ((InternalAttachment)attachment).getAccessType();
+    	}
+    }
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeLong( id );
         if( name == null ) { 

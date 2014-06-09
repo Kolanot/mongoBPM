@@ -22,12 +22,14 @@ import java.io.ObjectOutput;
 import java.util.Collections;
 import java.util.List;
 
+import static org.jbpm.persistence.mongodb.task.util.MongoPersistenceUtil.*;
 import org.jbpm.persistence.mongodb.task.util.CollectionUtils;
 import org.kie.internal.task.api.model.BooleanExpression;
+import org.kie.internal.task.api.model.Escalation;
 import org.kie.internal.task.api.model.Notification;
 import org.kie.internal.task.api.model.Reassignment;
 
-public class MongoEscalationImpl implements org.kie.internal.task.api.model.Escalation {
+public class MongoEscalationImpl implements Escalation {
 
     private Long                    id;
 
@@ -39,6 +41,12 @@ public class MongoEscalationImpl implements org.kie.internal.task.api.model.Esca
 
     private List<Reassignment>      reassignments = Collections.emptyList();
     
+    public MongoEscalationImpl() {}
+    public MongoEscalationImpl(Escalation escalation) {
+    	this.id = escalation.getId();
+    	this.name = escalation.getName();
+    	this.constraints = convertToBooleanExpressionImpl(escalation.getConstraints());
+    }
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeLong(  id );
         

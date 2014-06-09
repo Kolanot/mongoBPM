@@ -16,13 +16,14 @@
 
 package org.jbpm.persistence.mongodb.task.model;
 
-import static org.jbpm.persistence.mongodb.task.model.MongoTaskDataImpl.*;
+import static org.jbpm.persistence.mongodb.task.util.MongoPersistenceUtil.*;
 
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Date;
 
+import org.kie.api.task.model.Comment;
 import org.kie.api.task.model.User;
 import org.kie.internal.task.api.model.InternalComment;
 import org.mongodb.morphia.annotations.Embedded;
@@ -37,6 +38,14 @@ public class MongoCommentImpl implements InternalComment  {
     private MongoUserImpl addedBy;
     
     private Date addedAt;    
+    
+    public MongoCommentImpl() {}
+    public MongoCommentImpl(Comment comment) {
+    	this.id = comment.getId();
+    	this.text = comment.getText();
+    	this.addedBy = convertToUserImpl(comment.getAddedBy());
+    	this.addedAt = comment.getAddedAt();
+    }
     
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeLong( id );

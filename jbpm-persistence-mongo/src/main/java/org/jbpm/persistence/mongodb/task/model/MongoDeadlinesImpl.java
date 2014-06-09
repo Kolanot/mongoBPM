@@ -22,13 +22,23 @@ import java.io.ObjectOutput;
 import java.util.Collections;
 import java.util.List;
 
+import static org.jbpm.persistence.mongodb.task.util.MongoPersistenceUtil.*;
+
 import org.jbpm.persistence.mongodb.task.util.CollectionUtils;
 import org.kie.internal.task.api.model.Deadline;
+import org.kie.internal.task.api.model.Deadlines;
 
-public class MongoDeadlinesImpl implements org.kie.internal.task.api.model.Deadlines {    
+public class MongoDeadlinesImpl implements Deadlines {    
     private List<Deadline> startDeadlines = Collections.emptyList();
     
     private List<Deadline> endDeadlines  = Collections.emptyList();
+    
+    public MongoDeadlinesImpl() {}
+    
+    public MongoDeadlinesImpl(Deadlines deadlines) {
+    	this.startDeadlines = convertToDeadlineImpl(deadlines.getStartDeadlines());
+    	this.endDeadlines = convertToDeadlineImpl(deadlines.getEndDeadlines());
+    }
     
     public void writeExternal(ObjectOutput out) throws IOException {
         CollectionUtils.writeDeadlineList( startDeadlines, out );
@@ -46,7 +56,7 @@ public class MongoDeadlinesImpl implements org.kie.internal.task.api.model.Deadl
     }
     
     public void setStartDeadlines(List<Deadline> startDeadlines) {
-        this.startDeadlines = startDeadlines;
+        this.startDeadlines = convertToDeadlineImpl(startDeadlines);
     }
     
     public List<Deadline> getEndDeadlines() {
@@ -54,7 +64,7 @@ public class MongoDeadlinesImpl implements org.kie.internal.task.api.model.Deadl
     }
     
     public void setEndDeadlines(List<Deadline> endDeadlines) {
-        this.endDeadlines = endDeadlines;
+        this.endDeadlines = convertToDeadlineImpl(endDeadlines);
     }
 
     @Override

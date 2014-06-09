@@ -16,6 +16,7 @@
 package org.jbpm.persistence.mongodb;
 
 import org.drools.core.time.TimerService;
+import org.jbpm.persistence.mongodb.task.service.MongoTaskServiceFactory;
 import org.jbpm.process.core.timer.GlobalSchedulerService;
 import org.jbpm.process.core.timer.TimerServiceRegistry;
 import org.jbpm.process.core.timer.impl.GlobalTimerService;

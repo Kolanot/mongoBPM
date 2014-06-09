@@ -20,18 +20,24 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import org.kie.internal.task.api.model.BooleanExpression;
+
 import org.mongodb.morphia.annotations.Embedded;
 
 @Embedded
-public class MongoBooleanExpressionImpl implements org.kie.internal.task.api.model.BooleanExpression {
+public class MongoBooleanExpressionImpl implements BooleanExpression {
     
     private Long   id;
     private String type;
     
     private String expression;
     
-    public MongoBooleanExpressionImpl() {
-        
+    public MongoBooleanExpressionImpl() {}
+    
+    public MongoBooleanExpressionImpl(BooleanExpression booleanExpression) {
+    	this.id = booleanExpression.getId();
+    	this.type = booleanExpression.getType();
+    	this.expression = booleanExpression.getExpression();
     }
     
     public void writeExternal(ObjectOutput out) throws IOException {

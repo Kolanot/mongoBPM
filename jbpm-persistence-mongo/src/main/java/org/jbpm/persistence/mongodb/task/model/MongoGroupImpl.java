@@ -32,6 +32,10 @@ public class MongoGroupImpl extends MongoOrganizationalEntityImpl implements Gro
         super( id );
     }
 
+    public MongoGroupImpl(Group group) {
+        super( group.getId() );
+    }
+
     public void writeExternal(ObjectOutput out) throws IOException {
         super.writeExternal( out );
 

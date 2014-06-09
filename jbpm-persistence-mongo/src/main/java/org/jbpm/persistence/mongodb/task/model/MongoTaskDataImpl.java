@@ -26,23 +26,26 @@ import java.util.Date;
 import java.util.List;
 
 import org.jbpm.persistence.mongodb.task.util.CollectionUtils;
+import static org.jbpm.persistence.mongodb.task.util.MongoPersistenceUtil.*;
 import org.kie.api.task.model.Attachment;
 import org.kie.api.task.model.Comment;
 import org.kie.api.task.model.Status;
+import org.kie.api.task.model.TaskData;
 import org.kie.api.task.model.User;
 import org.kie.internal.task.api.model.AccessType;
 import org.kie.internal.task.api.model.ContentData;
 import org.kie.internal.task.api.model.FaultData;
 import org.kie.internal.task.api.model.InternalTaskData;
 
+
 public class MongoTaskDataImpl implements InternalTaskData {
     private Status status = Status.Created;         // initial default state
 
     private Status previousStatus = null;
 
-    private User actualOwner;
+    private MongoUserImpl actualOwner;
 
-    private User createdBy;
+    private MongoUserImpl createdBy;
 
     private Date createdOn;
 
@@ -87,6 +90,39 @@ public class MongoTaskDataImpl implements InternalTaskData {
     private List<Comment> comments = Collections.emptyList();
 
     private List<Attachment> attachments = Collections.emptyList();
+    
+    public MongoTaskDataImpl() {};
+    public MongoTaskDataImpl(TaskData taskData) {
+    	this.status= taskData.getStatus();
+    	this.previousStatus = taskData.getPreviousStatus();
+    	this.actualOwner = convertToUserImpl(taskData.getActualOwner());
+    	this.createdBy = convertToUserImpl(taskData.getCreatedBy());
+    	this.createdOn = taskData.getCreatedOn();
+    	this.activationTime = taskData.getActivationTime();
+    	this.expirationTime = taskData.getExpirationTime();
+    	this.skipable = taskData.isSkipable();
+    	this.workItemId = taskData.getWorkItemId();
+    	this.processInstanceId = taskData.getProcessInstanceId();
+    	this.documentType = taskData.getDocumentType();
+    	this.documentContentId = taskData.getDocumentContentId();
+    	this.deploymentId = taskData.getDeploymentId();
+    	this.outputType = taskData.getOutputType();
+    	this.outputContentId = taskData.getOutputContentId();
+    	this.faultContentId = taskData.getFaultContentId();
+    	this.faultName = taskData.getFaultName();
+    	this.faultType = taskData.getFaultType();
+    	this.parentId = taskData.getParentId();
+    	this.processId = taskData.getProcessId();
+    	this.processSessionId = taskData.getProcessSessionId();
+    	this.comments = convertToCommentImpl(taskData.getComments());
+    	this.attachments = convertToAttachmentImpl(taskData.getAttachments());  
+    	if (taskData instanceof InternalTaskData) {
+    		InternalTaskData ita = (InternalTaskData)taskData;
+    		this.documentAccessType = ita.getDocumentAccessType();
+    		this.outputAccessType = ita.getOutputAccessType();
+    		this.faultAccessType = ita.getFaultAccessType();
+    	}
+    }
 
     public void writeExternal(ObjectOutput out) throws IOException {
         if (status != null) {
@@ -775,26 +811,4 @@ public class MongoTaskDataImpl implements InternalTaskData {
         this.deploymentId = deploymentId;
     }
     
-    static MongoUserImpl convertToUserImpl(User user) { 
-        if( user == null ) { 
-            return null;
-        }
-        if( user instanceof MongoUserImpl ) { 
-            return (MongoUserImpl) user;
-        } else { 
-            return new MongoUserImpl(user.getId());
-        }
-    }
-
-    static MongoGroupImpl convertToGroupImpl(MongoGroupImpl group) { 
-        if( group == null ) { 
-            return null;
-        }
-        if( group instanceof MongoGroupImpl ) { 
-            return (MongoGroupImpl) group;
-        } else { 
-            return new MongoGroupImpl(group.getId());
-        }
-    }
-
 }

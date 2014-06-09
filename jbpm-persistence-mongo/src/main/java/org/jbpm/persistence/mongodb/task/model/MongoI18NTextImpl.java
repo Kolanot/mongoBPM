@@ -21,6 +21,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.List;
 
+import org.kie.api.task.model.I18NText;
 import org.kie.internal.task.api.model.InternalI18NText;
 
 public class MongoI18NTextImpl implements InternalI18NText {
@@ -33,8 +34,12 @@ public class MongoI18NTextImpl implements InternalI18NText {
 
     private String text;
 
-    public MongoI18NTextImpl() {
-
+    public MongoI18NTextImpl() {}
+    
+    public MongoI18NTextImpl(I18NText i18NText) {
+    	this.id = i18NText.getId();
+    	this.language = i18NText.getLanguage();
+    	setText(i18NText.getText());
     }
     
     public void writeExternal(ObjectOutput out) throws IOException {
